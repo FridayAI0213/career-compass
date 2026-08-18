@@ -12,18 +12,18 @@ export interface AiMessage {
 
 export interface AiCompletionRequest {
   messages: AiMessage[];
-  model?: string;
-  temperature?: number;
+  model?: string | undefined;
+  temperature?: number | undefined;
   /** JSON schema the provider must conform to, when structured output is needed. */
-  jsonSchema?: { name: string; schema: Record<string, unknown> };
+  jsonSchema?: { name: string; schema: Record<string, unknown> } | undefined;
 }
 
 export interface AiCompletionResult {
   text: string;
   model: string;
   provider: string;
-  inputTokens?: number;
-  outputTokens?: number;
+  inputTokens?: number | undefined;
+  outputTokens?: number | undefined;
   latencyMs: number;
 }
 
