@@ -183,7 +183,7 @@ export const refreshOpportunities = createServerFn({ method: "POST" })
             industry_score: evidence.components.find((c) => c.key === "industry")?.score ?? null,
             trajectory_score: evidence.components.find((c) => c.key === "trajectory")?.score ?? null,
             preferences_score: evidence.components.find((c) => c.key === "preferences")?.score ?? null,
-            evidence: evidence as unknown as Record<string, unknown>,
+            evidence: JSON.parse(JSON.stringify(evidence)),
             strengths: evidence.strengths,
             gaps: evidence.gaps,
             risk_factors: evidence.risks,
