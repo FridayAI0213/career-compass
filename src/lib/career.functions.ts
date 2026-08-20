@@ -182,7 +182,7 @@ export const extractResume = createServerFn({ method: "POST" })
 
       await context.supabase
         .from("documents")
-        .update({ extracted: result.data as unknown as Record<string, unknown>, extraction_status: "review" })
+        .update({ extracted: JSON.parse(JSON.stringify(result.data)), extraction_status: "review" })
         .eq("id", data.documentId);
 
       await context.supabase.from("ai_activity").insert({
