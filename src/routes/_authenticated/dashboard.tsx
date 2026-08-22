@@ -52,7 +52,7 @@ function Dashboard() {
   const readiness = scores.length ? Math.round(scores.slice(0, 5).reduce((a, b) => a + b, 0) / Math.min(5, scores.length)) : 0;
   const active = (applications.data ?? []).filter((app) => !["rejected", "withdrawn", "offer"].includes(app.status));
 
-  if (profile.isSuccess && !profile.data?.onboarding_complete) {
+  if (profile.isSuccess && !profile.data?.onboarding_completed_at) {
     return (
       <AppShell title="Welcome to JobOS" description="Let's build your career profile before scoring any roles.">
         <div className="panel max-w-xl space-y-3 p-6">
