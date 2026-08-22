@@ -47,7 +47,7 @@ function Onboarding() {
   const [level, setLevel] = useState<(typeof LEVELS)[number]>("mid");
   const [years, setYears] = useState("3");
   const [locations, setLocations] = useState("");
-  const [workMode, setWorkMode] = useState("hybrid");
+  const [workMode, setWorkMode] = useState<"remote" | "hybrid" | "onsite" | "flexible">("hybrid");
   const [salary, setSalary] = useState("");
   const [goal, setGoal] = useState("");
 
@@ -80,10 +80,10 @@ function Onboarding() {
             .filter(Boolean),
           work_mode: workMode,
           salary_min: salary ? Number(salary) : null,
-          career_goal: goal || null,
-          domain_terminology: chosen?.terminology ?? [],
+          career_goals: goal || null,
           target_roles: chosen?.roleFamilies ?? [],
-          onboarding_complete: true,
+          onboarding_step: "complete",
+          onboarding_completed_at: new Date().toISOString(),
         },
         { onConflict: "user_id" },
       );
@@ -256,9 +256,9 @@ function Onboarding() {
                   id="mode"
                   className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
                   value={workMode}
-                  onChange={(event) => setWorkMode(event.target.value)}
+                  onChange={(event) => setWorkMode(event.target.value as typeof workMode)}
                 >
-                  {["remote", "hybrid", "onsite", "any"].map((value) => (
+                  {(["remote", "hybrid", "onsite", "flexible"] as const).map((value) => (
                     <option key={value} value={value}>
                       {value}
                     </option>
