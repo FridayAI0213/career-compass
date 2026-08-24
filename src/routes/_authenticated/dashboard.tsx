@@ -45,6 +45,8 @@ function Dashboard() {
     onError: () => toast.error("Could not refresh matches right now."),
   });
 
+  const fullName = (user?.user_metadata as { full_name?: string } | undefined)?.full_name ?? "";
+  const firstName = fullName.trim().split(" ")[0] ?? "";
   const top = recommendations.data ?? [];
   const scores = top
     .map((row) => (Array.isArray(row.analysis) ? row.analysis[0]?.match_score : row.analysis?.match_score))
@@ -71,7 +73,7 @@ function Dashboard() {
 
   return (
     <AppShell
-      title={`Hi${profile.data?.specialization ? `, ${profile.data.specialization}` : ""}`}
+      title={`Hi${firstName ? `, ${firstName}` : ""}`}
       description="Your career position, scored opportunities and next best actions."
       actions={
         <Button onClick={() => sync.mutate()} disabled={sync.isPending}>
@@ -121,7 +123,7 @@ function Dashboard() {
                         {job.company} · {job.location ?? "Location flexible"}
                       </p>
                     </div>
-                    <Badge variant="secondary">{row.priority}</Badge>
+                    <Badge variant="secondary">{row.priority.replaceAll("_", " ")}</Badge>
                   </li>
                 );
               })}
