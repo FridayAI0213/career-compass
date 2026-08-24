@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
 export const careerProfileQuery = (userId: string | undefined) =>
   queryOptions({
@@ -12,17 +13,16 @@ export const careerProfileQuery = (userId: string | undefined) =>
     },
   });
 
-export const recordQuery = (
-  table: "skills" | "experiences" | "education" | "certifications" | "projects",
-  userId: string | undefined,
-) =>
+type RecordTable = "skills" | "experiences" | "education" | "certifications" | "projects";
+
+export const recordQuery = <T extends RecordTable>(table: T, userId: string | undefined) =>
   queryOptions({
     queryKey: [table, userId],
     enabled: Boolean(userId),
     queryFn: async () => {
       const { data, error } = await supabase.from(table).select("*").order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as unknown as Tables<T>[];
     },
   });
 
