@@ -44,9 +44,13 @@ export function AppShell({
 }) {
   const router = useRouter();
 
+  const queryClient = useQueryClient();
+
   async function signOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
     await supabase.auth.signOut();
-    await router.navigate({ to: "/auth" });
+    await router.navigate({ to: "/auth", replace: true });
   }
 
   return (
