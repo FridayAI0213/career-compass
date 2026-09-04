@@ -138,6 +138,14 @@ function AuthPage() {
           <h1 className="font-display text-2xl font-semibold">Welcome to JobOS</h1>
           <p className="mt-1 text-sm text-muted-foreground">Sign in to continue your career plan.</p>
 
+          {pendingConfirm ? (
+            <div className="mt-5 rounded-md border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+              We sent a confirmation link to <span className="text-foreground">{pendingConfirm}</span>. Open it, then
+              sign in below.
+            </div>
+          ) : null}
+
+
           <Button variant="outline" className="mt-6 w-full" onClick={google}>
             Continue with Google
           </Button>
