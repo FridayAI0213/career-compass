@@ -48,6 +48,7 @@ const FEATURES = [
 ] as const;
 
 function Landing() {
+  const { user, loading } = useAuth();
   return (
     <div className="min-h-screen bg-background">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
