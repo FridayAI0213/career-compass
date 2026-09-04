@@ -37,32 +37,50 @@ function AuthPage() {
   const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const [pendingConfirm, setPendingConfirm] = useState<string | null>(null);
+
+  // Send anyone who already has a live session straight on, and react to a
+  // session arriving while this page is open (OAuth popup, other tab).
   useEffect(() => {
+    let active = true;
     void supabase.auth.getSession().then(({ data }) => {
-      if (data.session) void router.navigate({ to: destination });
+      if (active && data.session) void router.navigate({ to: destination, replace: true });
     });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) void router.navigate({ to: destination, replace: true });
+    });
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, [router, destination]);
 
   async function signIn(event: React.FormEvent) {
     event.preventDefault();
     setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) {
       toast.error(error.message);
       return;
     }
-    await router.navigate({ to: destination });
+    if (!data.session) {
+      toast.error("Sign-in did not return a session. Please try again.");
+      return;
+    }
+    await router.navigate({ to: destination, replace: true });
   }
 
   async function signUp(event: React.FormEvent) {
     event.preventDefault();
     setBusy(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}${destination}`,
+        emailRedirectTo: window.location.origin,
         data: { full_name: fullName },
       },
     });
@@ -71,8 +89,14 @@ function AuthPage() {
       toast.error(error.message);
       return;
     }
-    toast.success("Account created. Check your inbox if confirmation is required.");
-    await router.navigate({ to: destination });
+    // With email confirmation on, signUp returns no session: the user is NOT
+    // signed in yet. Navigating here is what bounced people back out before.
+    if (!data.session) {
+      setPendingConfirm(email);
+      toast.success("Account created. Confirm your email, then sign in.");
+      return;
+    }
+    await router.navigate({ to: destination, replace: true });
   }
 
   async function google() {
@@ -84,7 +108,13 @@ function AuthPage() {
       return;
     }
     if (result.redirected) return;
-    await router.navigate({ to: destination });
+    // Wait for the session to be written before leaving this page.
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      toast.error("Google sign-in did not create a session. Please try again.");
+      return;
+    }
+    await router.navigate({ to: destination, replace: true });
   }
 
   return (
@@ -107,6 +137,14 @@ function AuthPage() {
         <div className="w-full max-w-sm">
           <h1 className="font-display text-2xl font-semibold">Welcome to JobOS</h1>
           <p className="mt-1 text-sm text-muted-foreground">Sign in to continue your career plan.</p>
+
+          {pendingConfirm ? (
+            <div className="mt-5 rounded-md border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+              We sent a confirmation link to <span className="text-foreground">{pendingConfirm}</span>. Open it, then
+              sign in below.
+            </div>
+          ) : null}
+
 
           <Button variant="outline" className="mt-6 w-full" onClick={google}>
             Continue with Google

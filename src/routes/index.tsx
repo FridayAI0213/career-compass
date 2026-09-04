@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Compass, LineChart, ShieldCheck, Sparkle, Target, Workflow } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -47,6 +48,7 @@ const FEATURES = [
 ] as const;
 
 function Landing() {
+  const { user, loading } = useAuth();
   return (
     <div className="min-h-screen bg-background">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
@@ -56,9 +58,20 @@ function Landing() {
           </span>
           JobOS
         </span>
-        <Button asChild size="sm">
-          <Link to="/auth">Sign in</Link>
-        </Button>
+        {loading ? (
+          <span className="h-8 w-24 rounded-md bg-muted" aria-hidden />
+        ) : user ? (
+          <div className="flex items-center gap-3">
+            <span className="hidden text-sm text-muted-foreground sm:inline">{user.email}</span>
+            <Button asChild size="sm">
+              <Link to="/dashboard">Go to dashboard</Link>
+            </Button>
+          </div>
+        ) : (
+          <Button asChild size="sm">
+            <Link to="/auth">Sign in</Link>
+          </Button>
+        )}
       </header>
 
       <main>
@@ -73,10 +86,10 @@ function Landing() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg">
-              <Link to="/auth">Start free</Link>
+              <Link to={user ? "/dashboard" : "/auth"}>{user ? "Open my workspace" : "Start free"}</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link to="/auth">See my matches</Link>
+              <Link to={user ? "/opportunities" : "/auth"}>See my matches</Link>
             </Button>
           </div>
 

@@ -1,4 +1,5 @@
 import { Link, useRouter } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   BriefcaseBusiness,
   ChartNoAxesColumn,
@@ -44,9 +45,13 @@ export function AppShell({
 }) {
   const router = useRouter();
 
+  const queryClient = useQueryClient();
+
   async function signOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
     await supabase.auth.signOut();
-    await router.navigate({ to: "/auth" });
+    await router.navigate({ to: "/auth", replace: true });
   }
 
   return (
