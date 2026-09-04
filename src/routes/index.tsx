@@ -86,10 +86,10 @@ function Landing() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg">
-              <Link to="/auth">Start free</Link>
+              <Link to={user ? "/dashboard" : "/auth"}>{user ? "Open my workspace" : "Start free"}</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link to="/auth">See my matches</Link>
+              <Link to={user ? "/opportunities" : "/auth"}>See my matches</Link>
             </Button>
           </div>
 
