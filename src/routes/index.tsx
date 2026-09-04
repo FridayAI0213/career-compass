@@ -58,9 +58,20 @@ function Landing() {
           </span>
           JobOS
         </span>
-        <Button asChild size="sm">
-          <Link to="/auth">Sign in</Link>
-        </Button>
+        {loading ? (
+          <span className="h-8 w-24 rounded-md bg-muted" aria-hidden />
+        ) : user ? (
+          <div className="flex items-center gap-3">
+            <span className="hidden text-sm text-muted-foreground sm:inline">{user.email}</span>
+            <Button asChild size="sm">
+              <Link to="/dashboard">Go to dashboard</Link>
+            </Button>
+          </div>
+        ) : (
+          <Button asChild size="sm">
+            <Link to="/auth">Sign in</Link>
+          </Button>
+        )}
       </header>
 
       <main>
