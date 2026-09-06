@@ -23,15 +23,22 @@ function norm(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9+#. ]/g, "").trim();
 }
 
+/** Matches an abbreviation as a standalone word so "ba" can't match "database". */
+function hasWord(haystack: string, ...words: string[]): boolean {
+  return words.some((word) => new RegExp(`(^|[^a-z0-9])${word}([^a-z0-9]|$)`).test(haystack));
+}
+
 function degreeRank(value: string | null): number {
   if (!value) return -1;
-  const v = value.toLowerCase();
-  if (v.includes("phd") || v.includes("doctor")) return 5;
-  if (v.includes("master") || v.includes("msc") || v.includes("m.s")) return 4;
-  if (v.includes("bachelor") || v.includes("bs") || v.includes("b.s") || v.includes("ba")) return 3;
-  if (v.includes("associate")) return 2;
-  if (v.includes("certificate") || v.includes("diploma")) return 1;
-  if (v.includes("none") || v.includes("not required")) return 0;
+  const v = value.toLowerCase().replace(/\./g, "");
+  // Professional doctorates rank with doctorates, not below a bachelor's.
+  if (v.includes("phd") || v.includes("doctor") || hasWord(v, "md", "jd", "dds", "dvm", "pharmd", "dnp", "edd"))
+    return 5;
+  if (v.includes("master") || hasWord(v, "msc", "ms", "ma", "mba", "meng", "msn", "mph", "llm")) return 4;
+  if (v.includes("bachelor") || hasWord(v, "bsc", "bs", "ba", "beng", "bsn")) return 3;
+  if (v.includes("associate") || hasWord(v, "aa", "as", "adn")) return 2;
+  if (v.includes("certificate") || v.includes("diploma") || v.includes("licence") || v.includes("license")) return 1;
+  if (v.includes("none") || v.includes("not required") || v.includes("no degree")) return 0;
   return -1;
 }
 
@@ -39,13 +46,26 @@ function clamp(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 
+/** "React" evidences "React.js"; exact tokens win, containment is the fallback. */
+function skillMatches(candidateSkills: Set<string>, jobSkill: string): boolean {
+  const target = norm(jobSkill);
+  if (!target) return false;
+  if (candidateSkills.has(target)) return true;
+  for (const owned of candidateSkills) {
+    if (owned.length < 3 || target.length < 3) continue;
+    if (owned.includes(target) || target.includes(owned)) return true;
+  }
+  return false;
+}
+
 export function scoreMatch(candidate: CandidateSnapshot, job: JobSnapshot): MatchEvidence {
   const candidateSkills = new Set(candidate.skills.map((s) => norm(s.name)).filter(Boolean));
   const jobSkills = job.skills.map(norm).filter(Boolean);
 
-  const matchedSkills = job.skills.filter((s) => candidateSkills.has(norm(s)));
-  const missingSkills = job.skills.filter((s) => !candidateSkills.has(norm(s)));
+  const matchedSkills = job.skills.filter((s) => skillMatches(candidateSkills, s));
+  const missingSkills = job.skills.filter((s) => !skillMatches(candidateSkills, s));
   const skillsScore = jobSkills.length === 0 ? 60 : (matchedSkills.length / jobSkills.length) * 100;
+
 
   // Experience
   const years = candidate.yearsExperience ?? 0;
@@ -99,9 +119,14 @@ export function scoreMatch(candidate: CandidateSnapshot, job: JobSnapshot): Matc
 
   // Location / work mode
   const jobLocation = norm(job.location ?? "");
-  const locationMatch = candidate.preferredLocations.some(
-    (loc) => jobLocation.includes(norm(loc)) || norm(loc).includes(jobLocation),
-  );
+  // An empty job location must never "contain" a preference — includes("") is
+  // always true, which previously made unlocated postings a perfect match.
+  const locationMatch =
+    jobLocation.length > 0 &&
+    candidate.preferredLocations.some((loc) => {
+      const pref = norm(loc);
+      return pref.length > 0 && (jobLocation.includes(pref) || pref.includes(jobLocation));
+    });
   const remoteFriendly = job.workMode === "remote" || candidate.workMode === "flexible";
   let locationScore = 55;
   let locationDetail = "Location not in stated preferences.";
@@ -111,13 +136,17 @@ export function scoreMatch(candidate: CandidateSnapshot, job: JobSnapshot): Matc
   } else if (locationMatch) {
     locationScore = 100;
     locationDetail = `${job.location} is a preferred location.`;
-  } else if (candidate.openToRelocation) {
-    locationScore = 72;
-    locationDetail = "Outside preferred locations, but candidate is open to relocation.";
   } else if (candidate.preferredLocations.length === 0) {
     locationScore = 70;
     locationDetail = "No location preferences recorded.";
+  } else if (jobLocation.length === 0) {
+    locationScore = 65;
+    locationDetail = "Posting does not state a location.";
+  } else if (candidate.openToRelocation) {
+    locationScore = 72;
+    locationDetail = "Outside preferred locations, but candidate is open to relocation.";
   }
+
 
   // Work mode preference
   const workModeScore =

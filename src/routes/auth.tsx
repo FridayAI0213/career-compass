@@ -1,8 +1,11 @@
 import { createFileRoute, useRouter, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { useAuth } from "@/lib/auth-context";
+import { readOAuthError, rememberRedirect, safePath } from "@/lib/auth-redirect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,50 +27,43 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-function safePath(value: string | undefined) {
-  return value && value.startsWith("/") && !value.startsWith("//") ? value : "/dashboard";
-}
-
 function AuthPage() {
   const router = useRouter();
   const search = useSearch({ from: "/auth" });
   const destination = safePath(search.redirect);
+  const { session, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [busy, setBusy] = useState(false);
-
+  const [busy, setBusy] = useState<null | "signin" | "signup" | "google">(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [pendingConfirm, setPendingConfirm] = useState<string | null>(null);
 
-  // Send anyone who already has a live session straight on, and react to a
-  // session arriving while this page is open (OAuth popup, other tab).
+  // Surface an OAuth failure that came back through the URL rather than
+  // silently dropping the user on a signed-out sign-in page.
   useEffect(() => {
-    let active = true;
-    void supabase.auth.getSession().then(({ data }) => {
-      if (active && data.session) void router.navigate({ to: destination, replace: true });
-    });
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) void router.navigate({ to: destination, replace: true });
-    });
-    return () => {
-      active = false;
-      subscription.unsubscribe();
-    };
-  }, [router, destination]);
+    const oauthError = readOAuthError();
+    if (oauthError) setFormError(oauthError);
+  }, []);
+
+  // A live session (including one arriving from another tab) means there is
+  // nothing to do here. The shared auth context is the only listener.
+  useEffect(() => {
+    if (!loading && session) void router.navigate({ to: destination, replace: true });
+  }, [loading, session, router, destination]);
 
   async function signIn(event: React.FormEvent) {
     event.preventDefault();
-    setBusy(true);
+    setFormError(null);
+    setBusy("signin");
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    setBusy(false);
+    setBusy(null);
     if (error) {
-      toast.error(error.message);
+      setFormError(error.message);
       return;
     }
     if (!data.session) {
-      toast.error("Sign-in did not return a session. Please try again.");
+      setFormError("Sign-in did not return a session. Please try again.");
       return;
     }
     await router.navigate({ to: destination, replace: true });
@@ -75,18 +71,19 @@ function AuthPage() {
 
   async function signUp(event: React.FormEvent) {
     event.preventDefault();
-    setBusy(true);
+    setFormError(null);
+    setBusy("signup");
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
         data: { full_name: fullName },
       },
     });
-    setBusy(false);
+    setBusy(null);
     if (error) {
-      toast.error(error.message);
+      setFormError(error.message);
       return;
     }
     // With email confirmation on, signUp returns no session: the user is NOT
@@ -100,21 +97,39 @@ function AuthPage() {
   }
 
   async function google() {
+    setFormError(null);
+    setBusy("google");
+    // The provider returns to a public callback route; the destination is kept
+    // separately so a protected page is never used as the redirect target.
+    rememberRedirect(destination);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: `${window.location.origin}/auth/callback`,
     });
     if (result.error) {
-      toast.error("Google sign-in failed. Try email instead.");
+      setBusy(null);
+      setFormError("Google sign-in failed. Please try again or use your email and password.");
       return;
     }
     if (result.redirected) return;
-    // Wait for the session to be written before leaving this page.
+    // Popup flow: the session is set by the helper, but confirm it exists
+    // before we treat the user as signed in.
     const { data } = await supabase.auth.getSession();
+    setBusy(null);
     if (!data.session) {
-      toast.error("Google sign-in did not create a session. Please try again.");
+      setFormError("Google sign-in did not create a session. Please try again.");
       return;
     }
     await router.navigate({ to: destination, replace: true });
+  }
+
+  if (loading || session) {
+    return (
+      <main className="flex min-h-screen items-center justify-center">
+        <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" aria-hidden /> Checking your session…
+        </p>
+      </main>
+    );
   }
 
   return (
@@ -145,10 +160,20 @@ function AuthPage() {
             </div>
           ) : null}
 
+          {formError ? (
+            <p
+              role="alert"
+              className="mt-5 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+            >
+              {formError}
+            </p>
+          ) : null}
 
-          <Button variant="outline" className="mt-6 w-full" onClick={google}>
+          <Button variant="outline" className="mt-6 w-full" onClick={google} disabled={busy !== null}>
+            {busy === "google" ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
             Continue with Google
           </Button>
+
 
           <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
             <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
@@ -176,9 +201,10 @@ function AuthPage() {
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={busy}>
-                  {busy ? "Signing in…" : "Sign in"}
+                <Button type="submit" className="w-full" disabled={busy !== null}>
+                  {busy === "signin" ? "Signing in…" : "Sign in"}
                 </Button>
+
               </form>
             </TabsContent>
 
@@ -203,9 +229,10 @@ function AuthPage() {
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={busy}>
-                  {busy ? "Creating account…" : "Create account"}
+                <Button type="submit" className="w-full" disabled={busy !== null}>
+                  {busy === "signup" ? "Creating account…" : "Create account"}
                 </Button>
+
               </form>
             </TabsContent>
           </Tabs>
