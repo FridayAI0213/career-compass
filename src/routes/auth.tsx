@@ -201,9 +201,10 @@ function AuthPage() {
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={busy}>
-                  {busy ? "Signing in…" : "Sign in"}
+                <Button type="submit" className="w-full" disabled={busy !== null}>
+                  {busy === "signin" ? "Signing in…" : "Sign in"}
                 </Button>
+
               </form>
             </TabsContent>
 
@@ -228,9 +229,10 @@ function AuthPage() {
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={busy}>
-                  {busy ? "Creating account…" : "Create account"}
+                <Button type="submit" className="w-full" disabled={busy !== null}>
+                  {busy === "signup" ? "Creating account…" : "Create account"}
                 </Button>
+
               </form>
             </TabsContent>
           </Tabs>
