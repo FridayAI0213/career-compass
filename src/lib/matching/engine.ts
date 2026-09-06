@@ -119,9 +119,14 @@ export function scoreMatch(candidate: CandidateSnapshot, job: JobSnapshot): Matc
 
   // Location / work mode
   const jobLocation = norm(job.location ?? "");
-  const locationMatch = candidate.preferredLocations.some(
-    (loc) => jobLocation.includes(norm(loc)) || norm(loc).includes(jobLocation),
-  );
+  // An empty job location must never "contain" a preference — includes("") is
+  // always true, which previously made unlocated postings a perfect match.
+  const locationMatch =
+    jobLocation.length > 0 &&
+    candidate.preferredLocations.some((loc) => {
+      const pref = norm(loc);
+      return pref.length > 0 && (jobLocation.includes(pref) || pref.includes(jobLocation));
+    });
   const remoteFriendly = job.workMode === "remote" || candidate.workMode === "flexible";
   let locationScore = 55;
   let locationDetail = "Location not in stated preferences.";
@@ -131,13 +136,17 @@ export function scoreMatch(candidate: CandidateSnapshot, job: JobSnapshot): Matc
   } else if (locationMatch) {
     locationScore = 100;
     locationDetail = `${job.location} is a preferred location.`;
-  } else if (candidate.openToRelocation) {
-    locationScore = 72;
-    locationDetail = "Outside preferred locations, but candidate is open to relocation.";
   } else if (candidate.preferredLocations.length === 0) {
     locationScore = 70;
     locationDetail = "No location preferences recorded.";
+  } else if (jobLocation.length === 0) {
+    locationScore = 65;
+    locationDetail = "Posting does not state a location.";
+  } else if (candidate.openToRelocation) {
+    locationScore = 72;
+    locationDetail = "Outside preferred locations, but candidate is open to relocation.";
   }
+
 
   // Work mode preference
   const workModeScore =
