@@ -125,46 +125,10 @@ export const refreshOpportunities = createServerFn({ method: "POST" })
 
     scored.sort((a, b) => b.evidence.matchScore - a.evidence.matchScore);
 
-    let aiExplained = 0;
-    const aiOn = isAiConfigured();
-
+    // Scoring is deterministic and never waits on a model. Explanations are
+    // generated on demand from the opportunity list (see explainMatch).
     for (const [index, { job, evidence }] of scored.entries()) {
       const recommendation = deterministicRecommendation(evidence.matchScore);
-      let reasoning: string | null = null;
-      let aiGenerated = false;
-
-      if (aiOn && index < 5) {
-        try {
-          const result = await runAgent<{ reasoning: string }>({
-            agent: "job_ranking_agent",
-            temperature: 0.2,
-            userPrompt: [
-              `Candidate: ${JSON.stringify(candidate)}`,
-              `Job: ${JSON.stringify({ title: job.title, company: job.company, location: job.location, seniority: job.seniority, skills: job.skills, requirements: job.requirements, min_years: job.min_years_experience })}`,
-              `Deterministic evidence: ${JSON.stringify(evidence)}`,
-              'Return JSON: { "reasoning": "3-5 short sentences explaining the match, concerns and the recommended action, citing only the supplied evidence" }.',
-            ].join("\n\n"),
-          });
-          reasoning = result.data.reasoning;
-          aiGenerated = true;
-          aiExplained += 1;
-          await supabase.from("ai_activity").insert({
-            user_id: userId,
-            agent: result.meta.agent,
-            analysis_type: "job_ranking",
-            input_ref: { job_id: job.id },
-            provider: result.meta.provider,
-            model: result.meta.model,
-            prompt_version: result.meta.promptVersion,
-            input_tokens: result.meta.inputTokens ?? null,
-            output_tokens: result.meta.outputTokens ?? null,
-            latency_ms: result.meta.latencyMs,
-            summary: `Explained match for ${job.title} at ${job.company}.`,
-          });
-        } catch (error) {
-          console.error("job_ranking_agent failed", error);
-        }
-      }
 
       const { data: analysis } = await supabase
         .from("job_analyses")
