@@ -2,12 +2,25 @@ import { getAiProvider } from "./provider.server";
 import { PROMPTS, type AgentName } from "./prompts";
 import type { AiMessage } from "./types";
 
-export interface AgentRunOptions {
+export interface AgentRunOptions<T = unknown> {
   agent: AgentName;
   userPrompt: string;
   model?: string;
   temperature?: number;
   jsonSchema?: { name: string; schema: Record<string, unknown> };
+  /**
+   * Structural validation for the model response. Model output is never trusted:
+   * when a validator is supplied the parsed JSON must satisfy it or the run fails
+   * with AiValidationError so callers can fall back to deterministic data.
+   */
+  validate?: (raw: unknown) => T;
+}
+
+export class AiValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AiValidationError";
+  }
 }
 
 export interface AgentRunResult<T> {
@@ -31,8 +44,8 @@ function parseJson<T>(text: string): T {
   return JSON.parse(body) as T;
 }
 
-/** Runs a logical agent and returns parsed structured output plus run metadata. */
-export async function runAgent<T>(options: AgentRunOptions): Promise<AgentRunResult<T>> {
+/** Runs a logical agent and returns parsed, validated structured output plus run metadata. */
+export async function runAgent<T>(options: AgentRunOptions<T>): Promise<AgentRunResult<T>> {
   const definition = PROMPTS[options.agent];
   const provider = getAiProvider();
 
@@ -48,8 +61,26 @@ export async function runAgent<T>(options: AgentRunOptions): Promise<AgentRunRes
     jsonSchema: options.jsonSchema,
   });
 
+  let parsed: unknown;
+  try {
+    parsed = parseJson<unknown>(result.text);
+  } catch {
+    throw new AiValidationError(`${definition.agent} returned output that is not valid JSON.`);
+  }
+
+  let data: T;
+  if (options.validate) {
+    try {
+      data = options.validate(parsed);
+    } catch {
+      throw new AiValidationError(`${definition.agent} returned output that failed schema validation.`);
+    }
+  } else {
+    data = parsed as T;
+  }
+
   return {
-    data: parseJson<T>(result.text),
+    data,
     meta: {
       agent: definition.agent,
       promptVersion: definition.version,
