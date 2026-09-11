@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export interface RefreshResult {
   ingested: number;
   analyzed: number;
-  aiExplained: number;
+  
   demoOnly: boolean;
   message: string;
 }
@@ -152,8 +152,6 @@ export const refreshOpportunities = createServerFn({ method: "POST" })
             gaps: evidence.gaps,
             risk_factors: evidence.risks,
             missing_qualifications: evidence.missingCertifications,
-            ai_reasoning: reasoning,
-            ai_generated: aiGenerated,
             recommendation,
             recommendation_priority: index + 1,
           },
@@ -169,7 +167,6 @@ export const refreshOpportunities = createServerFn({ method: "POST" })
           analysis_id: analysis?.id ?? null,
           rank: index + 1,
           priority: recommendation,
-          reasoning,
           recommended_action: recommendation,
           generated_at: new Date().toISOString(),
         },
@@ -182,7 +179,6 @@ export const refreshOpportunities = createServerFn({ method: "POST" })
     return {
       ingested: discovered.length,
       analyzed: scored.length,
-      aiExplained,
       demoOnly: providers.length === 0,
       message:
         providers.length === 0
