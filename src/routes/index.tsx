@@ -10,12 +10,12 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "JobOS maps your specialization, scores real openings against your evidence, and runs your applications and interview prep as one system.",
+          "JobOS keeps your career record, scores openings against it with transparent rules, and tracks your applications in one pipeline. Matching currently uses a sample catalogue while live job sources are connected.",
       },
       { property: "og:title", content: "JobOS — AI career intelligence for any profession" },
       {
         property: "og:description",
-        content: "Map your specialization, score real openings on evidence, and run your whole job search in one place.",
+        content: "Keep your career record, see transparent match scores against a sample catalogue, and track applications in one pipeline.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -33,17 +33,17 @@ const FEATURES = [
   {
     icon: Target,
     title: "Evidence-based matching",
-    body: "Scores come from deterministic rules across skills, experience, seniority, education, location and pay. The AI explains, it never invents.",
+    body: "Scores come from deterministic rules across skills, experience, seniority, education, location and pay. Openings currently come from a sample catalogue while live job sources are connected.",
   },
   {
     icon: Workflow,
-    title: "Pipeline that thinks",
-    body: "Saved roles, applications, recruiter contacts and follow-ups tracked from first look to signed offer.",
+    title: "Application pipeline",
+    body: "Add applications by hand or save them from your matches, then move each one through status columns from saved to offer.",
   },
   {
     icon: LineChart,
-    title: "Readiness insight",
-    body: "See the gaps between where you are and the roles you want, ranked by how much they move your score.",
+    title: "Career record",
+    body: "Keep your skills, work history, education and credentials in one place, and store pasted resumes privately.",
   },
 ] as const;
 
@@ -81,8 +81,8 @@ function Landing() {
             Your career, run as a system — not a pile of tabs.
           </h1>
           <p className="mt-5 max-w-2xl text-lg text-muted-foreground">
-            JobOS learns your profession, scores openings against the evidence in your record, and keeps every
-            application, follow-up and interview in one intelligent workspace.
+            JobOS keeps your career record, scores openings against it with transparent rules — currently a sample
+            catalogue while live job sources are connected — and tracks your applications in one pipeline.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg">

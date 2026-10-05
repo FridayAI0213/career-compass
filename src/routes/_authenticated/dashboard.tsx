@@ -103,6 +103,7 @@ function Dashboard() {
               See all
             </Link>
           </div>
+          <p className="mt-1 text-xs text-muted-foreground">Scored against a sample catalogue of postings, not live listings.</p>
 
           {top.length === 0 ? (
             <p className="py-8 text-sm text-muted-foreground">
@@ -144,7 +145,7 @@ function Dashboard() {
             {active.length === 0 ? (
               <ActionItem to="/applications" label="Log your first application to start pipeline tracking." />
             ) : null}
-            <ActionItem to="/documents" label="Upload a resume for structured extraction and review." />
+            <ActionItem to="/documents" label="Paste a resume to store it and run an AI analysis." />
           </ul>
         </div>
       </section>

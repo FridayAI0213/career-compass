@@ -22,10 +22,10 @@ export const Route = createFileRoute("/_authenticated/documents")({
       {
         name: "description",
         content:
-          "Store resumes and cover letters privately, and turn a pasted resume into structured career data you review before it counts.",
+          "Store pasted resumes privately and run an AI analysis. The result is saved but cannot yet be reviewed or imported into your record.",
       },
       { property: "og:title", content: "Documents — JobOS" },
-      { property: "og:description", content: "Private resume storage with reviewable structured extraction." },
+      { property: "og:description", content: "Private storage for pasted resumes, with a saved AI analysis." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -61,13 +61,13 @@ function Documents() {
       }
       setTitle("");
       setContent("");
-      toast.success("Extraction ready for your review below.");
+      toast.success("Analysis saved. It is not added to your career record.");
     },
     onError: (error: Error) => toast.error(error.message),
   });
 
   return (
-    <AppShell title="Documents" description="Extraction is always reviewed by you before it becomes part of your record.">
+    <AppShell title="Documents" description="The analysis result is saved and counted, but cannot yet be reviewed or imported into your record.">
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="panel space-y-3 p-5">
           <h2 className="font-display text-base font-semibold">Analyze a resume</h2>
@@ -141,7 +141,7 @@ function ExtractionSummary({ extracted }: { extracted: unknown }) {
   if (!found.length) return null;
   return (
     <p className="mt-2 text-xs text-muted-foreground">
-      Pending review: {found.map(([label, list]) => `${(list as unknown[]).length} ${label}`).join(" · ")}
+      Found (not imported): {found.map(([label, list]) => `${(list as unknown[]).length} ${label}`).join(" · ")}
     </p>
   );
 }
