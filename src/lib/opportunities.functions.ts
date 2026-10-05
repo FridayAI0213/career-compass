@@ -4,7 +4,6 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export interface RefreshResult {
   ingested: number;
   analyzed: number;
-  
   demoOnly: boolean;
   message: string;
 }
@@ -31,7 +30,7 @@ export const refreshOpportunities = createServerFn({ method: "POST" })
     ]);
 
     if (!profile) {
-      return { ingested: 0, analyzed: 0, aiExplained: 0, demoOnly: true, message: "Complete onboarding first." };
+      return { ingested: 0, analyzed: 0, demoOnly: true, message: "Complete onboarding first." };
     }
 
     const keywords = [

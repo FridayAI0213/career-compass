@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { refreshOpportunities } from "@/lib/opportunities.functions";
-import { topOpportunitiesQuery } from "@/lib/career-queries";
+import { applicationsQuery, topOpportunitiesQuery } from "@/lib/career-queries";
+import { ErrorState, LoadingRows } from "@/components/ui/query-state";
 
 export const Route = createFileRoute("/_authenticated/opportunities")({
   head: () => ({
@@ -36,6 +37,7 @@ function Opportunities() {
   const queryClient = useQueryClient();
   const refresh = useServerFn(refreshOpportunities);
   const recommendations = useQuery(topOpportunitiesQuery(user?.id));
+  const applications = useQuery(applicationsQuery(user?.id));
   const [openId, setOpenId] = useState<string | null>(null);
 
   const sync = useMutation({
@@ -50,6 +52,14 @@ function Opportunities() {
   const save = useMutation({
     mutationFn: async (payload: { company: string; position: string; jobId: string; location: string | null }) => {
       if (!user) throw new Error("Not signed in");
+      const { data: existing, error: lookupError } = await supabase
+        .from("applications")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("job_id", payload.jobId)
+        .limit(1);
+      if (lookupError) throw new Error("Could not check your pipeline. Try again.");
+      if (existing && existing.length > 0) return { alreadySaved: true };
       const { error } = await supabase.from("applications").insert({
         user_id: user.id,
         job_id: payload.jobId,
@@ -58,16 +68,20 @@ function Opportunities() {
         location: payload.location,
         status: "saved",
       });
-      if (error) throw error;
+      if (error) throw new Error("Could not save this role. Try again.");
+      return { alreadySaved: false };
     },
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       await queryClient.invalidateQueries({ queryKey: ["applications"] });
-      toast.success("Saved to your pipeline.");
+      toast.success(result.alreadySaved ? "Already in your pipeline." : "Saved to your pipeline.");
     },
     onError: (error: Error) => toast.error(error.message),
   });
 
   const rows = recommendations.data ?? [];
+  const savedJobIds = new Set(
+    (applications.data ?? []).map((a) => a.job_id).filter((id): id is string => Boolean(id)),
+  );
 
   return (
     <AppShell
@@ -80,7 +94,15 @@ function Opportunities() {
         </Button>
       }
     >
-      {rows.length === 0 ? (
+      {recommendations.isPending ? (
+        <LoadingRows rows={4} className="[&>*]:h-28" />
+      ) : recommendations.isError ? (
+        <ErrorState
+          title="We couldn't load your matches"
+          message="Your scored openings didn't load. Check your connection and try again."
+          onRetry={() => void recommendations.refetch()}
+        />
+      ) : rows.length === 0 ? (
         <div className="panel max-w-xl p-6">
           <p className="text-sm text-muted-foreground">
             No scored openings yet. Run a refresh to discover roles and score them against your career record.
