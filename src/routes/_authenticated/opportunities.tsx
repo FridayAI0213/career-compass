@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { refreshOpportunities } from "@/lib/opportunities.functions";
-import { topOpportunitiesQuery } from "@/lib/career-queries";
+import { applicationsQuery, topOpportunitiesQuery } from "@/lib/career-queries";
+import { ErrorState, LoadingRows } from "@/components/ui/query-state";
 
 export const Route = createFileRoute("/_authenticated/opportunities")({
   head: () => ({
@@ -23,7 +24,10 @@ export const Route = createFileRoute("/_authenticated/opportunities")({
           "Openings ranked by deterministic evidence: skills, experience, seniority, location and compensation fit, with the reasoning shown.",
       },
       { property: "og:title", content: "Top matches — JobOS" },
-      { property: "og:description", content: "Openings ranked by evidence with transparent scoring and reasoning." },
+      {
+        property: "og:description",
+        content: "Openings ranked by evidence with transparent scoring and reasoning.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -36,6 +40,7 @@ function Opportunities() {
   const queryClient = useQueryClient();
   const refresh = useServerFn(refreshOpportunities);
   const recommendations = useQuery(topOpportunitiesQuery(user?.id));
+  const applications = useQuery(applicationsQuery(user?.id));
   const [openId, setOpenId] = useState<string | null>(null);
 
   const sync = useMutation({
@@ -48,8 +53,21 @@ function Opportunities() {
   });
 
   const save = useMutation({
-    mutationFn: async (payload: { company: string; position: string; jobId: string; location: string | null }) => {
+    mutationFn: async (payload: {
+      company: string;
+      position: string;
+      jobId: string;
+      location: string | null;
+    }) => {
       if (!user) throw new Error("Not signed in");
+      const { data: existing, error: lookupError } = await supabase
+        .from("applications")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("job_id", payload.jobId)
+        .limit(1);
+      if (lookupError) throw new Error("Could not check your pipeline. Try again.");
+      if (existing && existing.length > 0) return { alreadySaved: true };
       const { error } = await supabase.from("applications").insert({
         user_id: user.id,
         job_id: payload.jobId,
@@ -58,16 +76,20 @@ function Opportunities() {
         location: payload.location,
         status: "saved",
       });
-      if (error) throw error;
+      if (error) throw new Error("Could not save this role. Try again.");
+      return { alreadySaved: false };
     },
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       await queryClient.invalidateQueries({ queryKey: ["applications"] });
-      toast.success("Saved to your pipeline.");
+      toast.success(result.alreadySaved ? "Already in your pipeline." : "Saved to your pipeline.");
     },
     onError: (error: Error) => toast.error(error.message),
   });
 
   const rows = recommendations.data ?? [];
+  const savedJobIds = new Set(
+    (applications.data ?? []).map((a) => a.job_id).filter((id): id is string => Boolean(id)),
+  );
 
   return (
     <AppShell
@@ -75,15 +97,28 @@ function Opportunities() {
       description="Every score is computed from your record — the AI only explains it."
       actions={
         <Button onClick={() => sync.mutate()} disabled={sync.isPending}>
-          {sync.isPending ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+          {sync.isPending ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <RefreshCw className="size-4" />
+          )}
           Refresh
         </Button>
       }
     >
-      {rows.length === 0 ? (
+      {recommendations.isPending ? (
+        <LoadingRows rows={4} className="[&>*]:h-28" />
+      ) : recommendations.isError ? (
+        <ErrorState
+          title="We couldn't load your matches"
+          message="Your scored openings didn't load. Check your connection and try again."
+          onRetry={() => void recommendations.refetch()}
+        />
+      ) : rows.length === 0 ? (
         <div className="panel max-w-xl p-6">
           <p className="text-sm text-muted-foreground">
-            No scored openings yet. Run a refresh to discover roles and score them against your career record.
+            No scored openings yet. Run a refresh to discover roles and score them against your
+            career record.
           </p>
         </div>
       ) : (
@@ -104,7 +139,8 @@ function Opportunities() {
                       {job.is_demo ? <Badge variant="outline">sample posting</Badge> : null}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {job.company} · {job.location ?? "Flexible"} · {job.work_mode ?? "unspecified"}
+                      {job.company} · {job.location ?? "Flexible"} ·{" "}
+                      {job.work_mode ?? "unspecified"}
                       {job.salary_min ? ` · from $${job.salary_min.toLocaleString()}` : ""}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-1">
@@ -124,6 +160,11 @@ function Opportunities() {
                     <Button
                       variant="outline"
                       size="sm"
+                      disabled={
+                        savedJobIds.has(job.id) ||
+                        applications.isPending ||
+                        (save.isPending && save.variables?.jobId === job.id)
+                      }
                       onClick={() =>
                         save.mutate({
                           jobId: job.id,
@@ -133,10 +174,17 @@ function Opportunities() {
                         })
                       }
                     >
-                      Save to pipeline
+                      {savedJobIds.has(job.id) ? "Saved" : "Save to pipeline"}
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setOpenId(open ? null : row.id)}>
-                      Why <ChevronDown className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setOpenId(open ? null : row.id)}
+                    >
+                      Why{" "}
+                      <ChevronDown
+                        className={`size-4 transition-transform ${open ? "rotate-180" : ""}`}
+                      />
                     </Button>
                   </div>
                 </div>
@@ -147,7 +195,8 @@ function Opportunities() {
                       <p className="text-muted-foreground">{analysis.ai_reasoning}</p>
                     ) : (
                       <p className="text-muted-foreground">
-                        Scored deterministically. Refresh to generate a written explanation for your top roles.
+                        Scored deterministically. Refresh to generate a written explanation for your
+                        top roles.
                       </p>
                     )}
                     <div className="grid gap-4 sm:grid-cols-3">
