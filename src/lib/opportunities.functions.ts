@@ -22,12 +22,13 @@ export const refreshOpportunities = createServerFn({ method: "POST" })
     const { runAgent } = await import("./ai/run.server");
     const { isAiConfigured } = await import("./ai/provider.server");
 
-    const [{ data: profile }, { data: skills }, { data: certs }, { data: education }] = await Promise.all([
-      supabase.from("career_profiles").select("*").eq("user_id", userId).maybeSingle(),
-      supabase.from("skills").select("name, years_experience").eq("user_id", userId),
-      supabase.from("certifications").select("name").eq("user_id", userId),
-      supabase.from("education").select("degree").eq("user_id", userId),
-    ]);
+    const [{ data: profile }, { data: skills }, { data: certs }, { data: education }] =
+      await Promise.all([
+        supabase.from("career_profiles").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("skills").select("name, years_experience").eq("user_id", userId),
+        supabase.from("certifications").select("name").eq("user_id", userId),
+        supabase.from("education").select("degree").eq("user_id", userId),
+      ]);
 
     if (!profile) {
       return { ingested: 0, analyzed: 0, demoOnly: true, message: "Complete onboarding first." };
@@ -85,8 +86,10 @@ export const refreshOpportunities = createServerFn({ method: "POST" })
       .limit(40);
 
     const highestDegree =
-      (education ?? []).map((e) => e.degree).filter(Boolean).sort((a, b) => (b ?? "").length - (a ?? "").length)[0] ??
-      null;
+      (education ?? [])
+        .map((e) => e.degree)
+        .filter(Boolean)
+        .sort((a, b) => (b ?? "").length - (a ?? "").length)[0] ?? null;
 
     const candidate = {
       level: profile.level,
@@ -137,15 +140,20 @@ export const refreshOpportunities = createServerFn({ method: "POST" })
             job_id: job.id,
             match_score: evidence.matchScore,
             skills_score: evidence.components.find((c) => c.key === "skills")?.score ?? null,
-            experience_score: evidence.components.find((c) => c.key === "experience")?.score ?? null,
+            experience_score:
+              evidence.components.find((c) => c.key === "experience")?.score ?? null,
             education_score: evidence.components.find((c) => c.key === "education")?.score ?? null,
-            certification_score: evidence.components.find((c) => c.key === "certification")?.score ?? null,
+            certification_score:
+              evidence.components.find((c) => c.key === "certification")?.score ?? null,
             location_score: evidence.components.find((c) => c.key === "location")?.score ?? null,
-            compensation_score: evidence.components.find((c) => c.key === "compensation")?.score ?? null,
+            compensation_score:
+              evidence.components.find((c) => c.key === "compensation")?.score ?? null,
             seniority_score: evidence.components.find((c) => c.key === "seniority")?.score ?? null,
             industry_score: evidence.components.find((c) => c.key === "industry")?.score ?? null,
-            trajectory_score: evidence.components.find((c) => c.key === "trajectory")?.score ?? null,
-            preferences_score: evidence.components.find((c) => c.key === "preferences")?.score ?? null,
+            trajectory_score:
+              evidence.components.find((c) => c.key === "trajectory")?.score ?? null,
+            preferences_score:
+              evidence.components.find((c) => c.key === "preferences")?.score ?? null,
             evidence: JSON.parse(JSON.stringify(evidence)),
             strengths: evidence.strengths,
             gaps: evidence.gaps,

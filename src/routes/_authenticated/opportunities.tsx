@@ -24,7 +24,10 @@ export const Route = createFileRoute("/_authenticated/opportunities")({
           "Openings ranked by deterministic evidence: skills, experience, seniority, location and compensation fit, with the reasoning shown.",
       },
       { property: "og:title", content: "Top matches — JobOS" },
-      { property: "og:description", content: "Openings ranked by evidence with transparent scoring and reasoning." },
+      {
+        property: "og:description",
+        content: "Openings ranked by evidence with transparent scoring and reasoning.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -50,7 +53,12 @@ function Opportunities() {
   });
 
   const save = useMutation({
-    mutationFn: async (payload: { company: string; position: string; jobId: string; location: string | null }) => {
+    mutationFn: async (payload: {
+      company: string;
+      position: string;
+      jobId: string;
+      location: string | null;
+    }) => {
       if (!user) throw new Error("Not signed in");
       const { data: existing, error: lookupError } = await supabase
         .from("applications")
@@ -89,7 +97,11 @@ function Opportunities() {
       description="Every score is computed from your record — the AI only explains it."
       actions={
         <Button onClick={() => sync.mutate()} disabled={sync.isPending}>
-          {sync.isPending ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+          {sync.isPending ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <RefreshCw className="size-4" />
+          )}
           Refresh
         </Button>
       }
@@ -105,7 +117,8 @@ function Opportunities() {
       ) : rows.length === 0 ? (
         <div className="panel max-w-xl p-6">
           <p className="text-sm text-muted-foreground">
-            No scored openings yet. Run a refresh to discover roles and score them against your career record.
+            No scored openings yet. Run a refresh to discover roles and score them against your
+            career record.
           </p>
         </div>
       ) : (
@@ -126,7 +139,8 @@ function Opportunities() {
                       {job.is_demo ? <Badge variant="outline">sample posting</Badge> : null}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {job.company} · {job.location ?? "Flexible"} · {job.work_mode ?? "unspecified"}
+                      {job.company} · {job.location ?? "Flexible"} ·{" "}
+                      {job.work_mode ?? "unspecified"}
                       {job.salary_min ? ` · from $${job.salary_min.toLocaleString()}` : ""}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-1">
@@ -162,8 +176,15 @@ function Opportunities() {
                     >
                       {savedJobIds.has(job.id) ? "Saved" : "Save to pipeline"}
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setOpenId(open ? null : row.id)}>
-                      Why <ChevronDown className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setOpenId(open ? null : row.id)}
+                    >
+                      Why{" "}
+                      <ChevronDown
+                        className={`size-4 transition-transform ${open ? "rotate-180" : ""}`}
+                      />
                     </Button>
                   </div>
                 </div>
@@ -174,7 +195,8 @@ function Opportunities() {
                       <p className="text-muted-foreground">{analysis.ai_reasoning}</p>
                     ) : (
                       <p className="text-muted-foreground">
-                        Scored deterministically. Refresh to generate a written explanation for your top roles.
+                        Scored deterministically. Refresh to generate a written explanation for your
+                        top roles.
                       </p>
                     )}
                     <div className="grid gap-4 sm:grid-cols-3">
