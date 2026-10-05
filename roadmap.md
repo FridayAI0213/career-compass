@@ -8,8 +8,8 @@
 - [ ] Desktop/mobile, accessibility, interaction, and route verification
 
 ## Honesty pass (Oct 5)
-- [ ] Landing/auth copy accuracy
+- [x] Landing/auth copy accuracy
 - [ ] Applications/Documents/Dashboard copy
-- [ ] Sample-catalogue notice on Top matches + dashboard
-- [ ] Closed column + loading/error on pipeline
+- [x] Sample-catalogue notice on Top matches + dashboard
+- [x] Closed column + loading/error on pipeline
 - [ ] Stripe test mode: ON HOLD until payments connected
