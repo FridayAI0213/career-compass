@@ -146,6 +146,11 @@ function Opportunities() {
                     <Button
                       variant="outline"
                       size="sm"
+                      disabled={
+                        savedJobIds.has(job.id) ||
+                        applications.isPending ||
+                        (save.isPending && save.variables?.jobId === job.id)
+                      }
                       onClick={() =>
                         save.mutate({
                           jobId: job.id,
@@ -155,7 +160,7 @@ function Opportunities() {
                         })
                       }
                     >
-                      Save to pipeline
+                      {savedJobIds.has(job.id) ? "Saved" : "Save to pipeline"}
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => setOpenId(open ? null : row.id)}>
                       Why <ChevronDown className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
