@@ -106,6 +106,9 @@ function Opportunities() {
         </Button>
       }
     >
+      <p className="mb-4 text-sm text-muted-foreground">
+        Matches are currently scored against a sample catalogue of postings, not live listings.
+      </p>
       {recommendations.isPending ? (
         <LoadingRows rows={4} className="[&>*]:h-28" />
       ) : recommendations.isError ? (

@@ -17,9 +17,9 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Sign in — JobOS Career Intelligence" },
-      { name: "description", content: "Sign in to JobOS to plan your specialization, score real openings and run your job search as one system." },
+      { name: "description", content: "Sign in to JobOS to manage your career record, see transparent match scores and track your applications." },
       { property: "og:title", content: "Sign in — JobOS Career Intelligence" },
-      { property: "og:description", content: "Sign in to JobOS to plan your specialization, score openings and run your job search." },
+      { property: "og:description", content: "Sign in to JobOS to manage your career record, see match scores and track applications." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
