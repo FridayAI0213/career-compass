@@ -13,3 +13,12 @@
 - [x] Sample-catalogue notice on Top matches + dashboard
 - [x] Closed column + loading/error on pipeline
 - [ ] Stripe test mode: ON HOLD until payments connected
+
+## Launch fixes (Oct 6)
+- [ ] P0.1 Password reset
+- [ ] P1.1 Resend confirmation + friendly errors
+- [ ] P1.4 Hide Coming next
+- [ ] P1.5 Leaked-password protection
+- [ ] P1.2 Tighten grants
+- [ ] P1.3 jobs creator exposure
+- [ ] P0.2 Signed-in browser run (open)
