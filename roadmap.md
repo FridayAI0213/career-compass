@@ -15,10 +15,10 @@
 - [ ] Stripe test mode: ON HOLD until payments connected
 
 ## Launch fixes (Oct 6)
-- [ ] P0.1 Password reset
-- [ ] P1.1 Resend confirmation + friendly errors
-- [ ] P1.4 Hide Coming next
-- [ ] P1.5 Leaked-password protection
-- [ ] P1.2 Tighten grants
-- [ ] P1.3 jobs creator exposure
+- [x] P0.1 Password reset
+- [x] P1.1 Resend confirmation + friendly errors
+- [x] P1.4 Hide Coming next
+- [x] P1.5 Leaked-password protection
+- [x] P1.2 Tighten grants
+- [x] P1.3 jobs creator exposure
 - [ ] P0.2 Signed-in browser run (open)
