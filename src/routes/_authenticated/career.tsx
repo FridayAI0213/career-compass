@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { careerProfileQuery, recordQuery } from "@/lib/career-queries";
+import { ActivitiesPanel, InternshipsPanel, NichesPanel } from "@/components/career/student-records";
 
 export const Route = createFileRoute("/_authenticated/career")({
   head: () => ({
@@ -145,12 +146,17 @@ function Career() {
       }
     >
       <Tabs defaultValue="skills" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="skills">Skills</TabsTrigger>
-          <TabsTrigger value="experience">Experience</TabsTrigger>
-          <TabsTrigger value="education">Education</TabsTrigger>
-          <TabsTrigger value="credentials">Credentials</TabsTrigger>
-        </TabsList>
+        <div className="-mx-1 overflow-x-auto px-1 pb-1">
+          <TabsList className="w-max">
+            <TabsTrigger value="skills">Skills</TabsTrigger>
+            <TabsTrigger value="experience">Experience</TabsTrigger>
+            <TabsTrigger value="education">Education</TabsTrigger>
+            <TabsTrigger value="credentials">Credentials</TabsTrigger>
+            <TabsTrigger value="niches">Niches</TabsTrigger>
+            <TabsTrigger value="internships">Internships</TabsTrigger>
+            <TabsTrigger value="activities">Activities</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="skills" className="space-y-4">
           <div className="panel flex flex-wrap items-end gap-3 p-4">
@@ -261,6 +267,16 @@ function Career() {
             }))}
             onRemove={(id) => remove.mutate({ table: "certifications", id })}
           />
+        </TabsContent>
+
+        <TabsContent value="niches">
+          <NichesPanel userId={user?.id} />
+        </TabsContent>
+        <TabsContent value="internships">
+          <InternshipsPanel userId={user?.id} />
+        </TabsContent>
+        <TabsContent value="activities">
+          <ActivitiesPanel userId={user?.id} />
         </TabsContent>
       </Tabs>
     </AppShell>
