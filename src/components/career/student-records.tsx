@@ -11,7 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,7 +54,8 @@ export function dateRangeError(start: string, end: string, current: boolean): st
 }
 
 function formatRange(start: string | null, end: string | null, current: boolean) {
-  const fmt = (d: string) => new Date(`${d}T00:00:00`).toLocaleDateString(undefined, { month: "short", year: "numeric" });
+  const fmt = (d: string) =>
+    new Date(`${d}T00:00:00`).toLocaleDateString(undefined, { month: "short", year: "numeric" });
   if (!start && !end && !current) return null;
   return `${start ? fmt(start) : "?"} – ${current ? "Present" : end ? fmt(end) : "?"}`;
 }
@@ -102,14 +109,22 @@ function ConfirmDelete({
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button variant="ghost" size="icon" aria-label={`Delete ${label}`} disabled={disabled} onClick={() => setOpen(true)}>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={`Delete ${label}`}
+        disabled={disabled}
+        onClick={() => setOpen(true)}
+      >
         <Trash2 className="size-4" />
       </Button>
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this entry?</AlertDialogTitle>
-            <AlertDialogDescription>“{label}” will be removed from your career record.</AlertDialogDescription>
+            <AlertDialogDescription>
+              “{label}” will be removed from your career record.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -188,7 +203,12 @@ function DatesFields({
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor={`${prefix}-start`}>Start date</Label>
-          <Input id={`${prefix}-start`} type="date" value={start} onChange={(e) => setStart(e.target.value)} />
+          <Input
+            id={`${prefix}-start`}
+            type="date"
+            value={start}
+            onChange={(e) => setStart(e.target.value)}
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor={`${prefix}-end`}>End date</Label>
@@ -230,14 +250,25 @@ export function NichesPanel({ userId }: { userId: string | undefined }) {
   const [editing, setEditing] = useState<Niche | "new" | null>(null);
 
   const reorder = useMutation({
-    mutationFn: async ({ rows, index, direction }: { rows: Niche[]; index: number; direction: -1 | 1 }) => {
+    mutationFn: async ({
+      rows,
+      index,
+      direction,
+    }: {
+      rows: Niche[];
+      index: number;
+      direction: -1 | 1;
+    }) => {
       const next = [...rows];
       const target = index + direction;
       [next[index], next[target]] = [next[target], next[index]];
       const results = await Promise.all(
-        next.map((row, position) => supabase.from("target_niches").update({ priority: position }).eq("id", row.id)),
+        next.map((row, position) =>
+          supabase.from("target_niches").update({ priority: position }).eq("id", row.id),
+        ),
       );
-      if (results.some((r) => r.error)) throw new Error("We couldn't reorder your niches. Please try again.");
+      if (results.some((r) => r.error))
+        throw new Error("We couldn't reorder your niches. Please try again.");
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["target_niches"] }),
     onError: (error: Error) => toast.error(error.message),
@@ -251,7 +282,8 @@ export function NichesPanel({ userId }: { userId: string | undefined }) {
         onAdd={() => setEditing("new")}
         empty={{
           title: "No target niches yet",
-          message: "Name the areas you want to work in — e.g. climate tech, pediatric nursing, sports analytics.",
+          message:
+            "Name the areas you want to work in — e.g. climate tech, pediatric nursing, sports analytics.",
         }}
       >
         {(rows) =>
@@ -284,14 +316,27 @@ export function NichesPanel({ userId }: { userId: string | undefined }) {
                   <p className="text-sm font-medium">{row.name}</p>
                   <SourceBadge source={row.source} />
                 </div>
-                {row.industry ? <p className="text-xs text-muted-foreground">{row.industry}</p> : null}
-                {row.rationale ? <p className="mt-1 text-sm text-muted-foreground">{row.rationale}</p> : null}
+                {row.industry ? (
+                  <p className="text-xs text-muted-foreground">{row.industry}</p>
+                ) : null}
+                {row.rationale ? (
+                  <p className="mt-1 text-sm text-muted-foreground">{row.rationale}</p>
+                ) : null}
               </div>
               <div className="flex shrink-0">
-                <Button variant="ghost" size="icon" aria-label={`Edit ${row.name}`} onClick={() => setEditing(row)}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Edit ${row.name}`}
+                  onClick={() => setEditing(row)}
+                >
                   <Pencil className="size-4" />
                 </Button>
-                <ConfirmDelete label={row.name} onConfirm={() => remove.mutate(row.id)} disabled={remove.isPending} />
+                <ConfirmDelete
+                  label={row.name}
+                  onConfirm={() => remove.mutate(row.id)}
+                  disabled={remove.isPending}
+                />
               </div>
             </li>
           ))
@@ -330,10 +375,16 @@ function NicheDialog({
   const save = useMutation({
     mutationFn: async () => {
       if (!userId) throw new Error("You're signed out. Sign in again to save.");
-      const values = { name: name.trim(), industry: industry.trim() || null, rationale: rationale.trim() || null };
+      const values = {
+        name: name.trim(),
+        industry: industry.trim() || null,
+        rationale: rationale.trim() || null,
+      };
       const { error } = initial
         ? await supabase.from("target_niches").update(values).eq("id", initial.id)
-        : await supabase.from("target_niches").insert({ ...values, user_id: userId, priority: nextPriority, source: "user" });
+        : await supabase
+            .from("target_niches")
+            .insert({ ...values, user_id: userId, priority: nextPriority, source: "user" });
       if (error) throw new Error(friendlyDbError(error));
     },
     onSuccess: async () => {
@@ -373,11 +424,20 @@ function NicheDialog({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="niche-industry">Industry</Label>
-            <Input id="niche-industry" value={industry} onChange={(e) => setIndustry(e.target.value)} />
+            <Input
+              id="niche-industry"
+              value={industry}
+              onChange={(e) => setIndustry(e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="niche-rationale">Why this interests me</Label>
-            <Textarea id="niche-rationale" rows={3} value={rationale} onChange={(e) => setRationale(e.target.value)} />
+            <Textarea
+              id="niche-rationale"
+              rows={3}
+              value={rationale}
+              onChange={(e) => setRationale(e.target.value)}
+            />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
@@ -408,7 +468,8 @@ export function InternshipsPanel({ userId }: { userId: string | undefined }) {
         onAdd={() => setEditing("new")}
         empty={{
           title: "No internships yet",
-          message: "Summer roles, co-ops, research placements and part-time internships all count here.",
+          message:
+            "Summer roles, co-ops, research placements and part-time internships all count here.",
         }}
       >
         {(rows) =>
@@ -429,7 +490,11 @@ export function InternshipsPanel({ userId }: { userId: string | undefined }) {
         }
       </ListFrame>
       {editing ? (
-        <InternshipDialog userId={userId} initial={editing === "new" ? null : editing} onClose={() => setEditing(null)} />
+        <InternshipDialog
+          userId={userId}
+          initial={editing === "new" ? null : editing}
+          onClose={() => setEditing(null)}
+        />
       ) : null}
     </>
   );
@@ -451,8 +516,12 @@ function InternshipDialog({
   const [start, setStart] = useState(initial?.start_date ?? "");
   const [end, setEnd] = useState(initial?.end_date ?? "");
   const [current, setCurrent] = useState(initial?.is_current ?? false);
-  const [responsibilities, setResponsibilities] = useState((initial?.responsibilities ?? []).join("\n"));
-  const [accomplishments, setAccomplishments] = useState((initial?.accomplishments ?? []).join("\n"));
+  const [responsibilities, setResponsibilities] = useState(
+    (initial?.responsibilities ?? []).join("\n"),
+  );
+  const [accomplishments, setAccomplishments] = useState(
+    (initial?.accomplishments ?? []).join("\n"),
+  );
   const [skills, setSkills] = useState((initial?.skills ?? []).join(", "));
   const [submitted, setSubmitted] = useState(false);
 
@@ -516,13 +585,22 @@ function InternshipDialog({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="int-title">Title *</Label>
-              <Input id="int-title" value={title} aria-invalid={Boolean(titleError)} onChange={(e) => setTitle(e.target.value)} />
+              <Input
+                id="int-title"
+                value={title}
+                aria-invalid={Boolean(titleError)}
+                onChange={(e) => setTitle(e.target.value)}
+              />
               <FieldError id="int-title-error" message={titleError} />
             </div>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="int-location">Location</Label>
-            <Input id="int-location" value={location} onChange={(e) => setLocation(e.target.value)} />
+            <Input
+              id="int-location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+            />
           </div>
           <DatesFields
             prefix="int"
@@ -537,11 +615,21 @@ function InternshipDialog({
           />
           <div className="space-y-1.5">
             <Label htmlFor="int-resp">Responsibilities (one per line)</Label>
-            <Textarea id="int-resp" rows={3} value={responsibilities} onChange={(e) => setResponsibilities(e.target.value)} />
+            <Textarea
+              id="int-resp"
+              rows={3}
+              value={responsibilities}
+              onChange={(e) => setResponsibilities(e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="int-acc">Accomplishments (one per line)</Label>
-            <Textarea id="int-acc" rows={3} value={accomplishments} onChange={(e) => setAccomplishments(e.target.value)} />
+            <Textarea
+              id="int-acc"
+              rows={3}
+              value={accomplishments}
+              onChange={(e) => setAccomplishments(e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="int-skills">Related skills (comma-separated)</Label>
@@ -598,7 +686,11 @@ export function ActivitiesPanel({ userId }: { userId: string | undefined }) {
         }
       </ListFrame>
       {editing ? (
-        <ActivityDialog userId={userId} initial={editing === "new" ? null : editing} onClose={() => setEditing(null)} />
+        <ActivityDialog
+          userId={userId}
+          initial={editing === "new" ? null : editing}
+          onClose={() => setEditing(null)}
+        />
       ) : null}
     </>
   );
@@ -620,7 +712,9 @@ function ActivityDialog({
   const [end, setEnd] = useState(initial?.end_date ?? "");
   const [current, setCurrent] = useState(initial?.is_current ?? false);
   const [description, setDescription] = useState(initial?.description ?? "");
-  const [accomplishments, setAccomplishments] = useState((initial?.accomplishments ?? []).join("\n"));
+  const [accomplishments, setAccomplishments] = useState(
+    (initial?.accomplishments ?? []).join("\n"),
+  );
   const [skills, setSkills] = useState((initial?.skills ?? []).join(", "));
   const [submitted, setSubmitted] = useState(false);
 
@@ -643,7 +737,9 @@ function ActivityDialog({
       };
       const { error } = initial
         ? await supabase.from("extracurriculars").update(values).eq("id", initial.id)
-        : await supabase.from("extracurriculars").insert({ ...values, user_id: userId, source: "user" });
+        : await supabase
+            .from("extracurriculars")
+            .insert({ ...values, user_id: userId, source: "user" });
       if (error) throw new Error(friendlyDbError(error));
     },
     onSuccess: async () => {
@@ -673,7 +769,12 @@ function ActivityDialog({
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="act-role">Role *</Label>
-              <Input id="act-role" value={role} aria-invalid={Boolean(roleError)} onChange={(e) => setRole(e.target.value)} />
+              <Input
+                id="act-role"
+                value={role}
+                aria-invalid={Boolean(roleError)}
+                onChange={(e) => setRole(e.target.value)}
+              />
               <FieldError id="act-role-error" message={roleError} />
             </div>
             <div className="space-y-1.5">
@@ -700,11 +801,21 @@ function ActivityDialog({
           />
           <div className="space-y-1.5">
             <Label htmlFor="act-desc">Description</Label>
-            <Textarea id="act-desc" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
+            <Textarea
+              id="act-desc"
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="act-acc">Accomplishments (one per line)</Label>
-            <Textarea id="act-acc" rows={3} value={accomplishments} onChange={(e) => setAccomplishments(e.target.value)} />
+            <Textarea
+              id="act-acc"
+              rows={3}
+              value={accomplishments}
+              onChange={(e) => setAccomplishments(e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="act-skills">Skills (comma-separated)</Label>

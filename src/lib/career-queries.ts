@@ -20,7 +20,10 @@ export const recordQuery = <T extends RecordTable>(table: T, userId: string | un
     queryKey: [table, userId],
     enabled: Boolean(userId),
     queryFn: async () => {
-      const { data, error } = await supabase.from(table).select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from(table)
+        .select("*")
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as Tables<T>[];
     },
@@ -62,7 +65,10 @@ export const documentsQuery = (userId: string | undefined) =>
     queryKey: ["documents", userId],
     enabled: Boolean(userId),
     queryFn: async () => {
-      const { data, error } = await supabase.from("documents").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("documents")
+        .select("*")
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
@@ -75,7 +81,10 @@ export const studentRecordQuery = <T extends StudentTable>(table: T, userId: str
     queryKey: [table, userId],
     enabled: Boolean(userId),
     queryFn: async () => {
-      const { data, error } = await supabase.from(table).select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from(table)
+        .select("*")
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as Tables<T>[];
     },
