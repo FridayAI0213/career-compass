@@ -44,12 +44,17 @@ export const refreshOpportunities = createServerFn({ method: "POST" })
 
     const discovered = await discoverJobs({ keywords, limit: 12 });
 
+    // Catalogue postings are shared system data, not user records: they are
+    // written by the server (caller already verified above) with no creator,
+    // so no user's id is ever visible on a shared row.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
     for (const job of discovered) {
-      await supabase.from("jobs").upsert(
+      await supabaseAdmin.from("jobs").upsert(
         {
           source: job.source,
           external_id: job.externalId,
-          created_by: userId,
+          created_by: null,
           is_demo: job.isDemo,
           company: job.company,
           title: job.title,
