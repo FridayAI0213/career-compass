@@ -8,6 +8,13 @@
       "when": 1791322579646,
       "tag": "0000_tighten_table_privileges",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791322718608,
+      "tag": "0001_student_profile_records",
+      "breakpoints": true
     }
   ]
 }

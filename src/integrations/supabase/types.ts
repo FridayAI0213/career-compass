@@ -550,6 +550,54 @@ export type Database = {
         }
         Relationships: []
       }
+      extracurriculars: {
+        Row: {
+          accomplishments: string[]
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          is_current: boolean
+          organization: string
+          role: string
+          skills: string[]
+          source: Database["public"]["Enums"]["data_source"]
+          start_date: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accomplishments?: string[]
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_current?: boolean
+          organization: string
+          role: string
+          skills?: string[]
+          source?: Database["public"]["Enums"]["data_source"]
+          start_date?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accomplishments?: string[]
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_current?: boolean
+          organization?: string
+          role?: string
+          skills?: string[]
+          source?: Database["public"]["Enums"]["data_source"]
+          start_date?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       follow_ups: {
         Row: {
           application_id: string
@@ -596,6 +644,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      internships: {
+        Row: {
+          accomplishments: string[]
+          created_at: string
+          employer: string
+          end_date: string | null
+          id: string
+          is_current: boolean
+          location: string | null
+          responsibilities: string[]
+          skills: string[]
+          source: Database["public"]["Enums"]["data_source"]
+          start_date: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accomplishments?: string[]
+          created_at?: string
+          employer: string
+          end_date?: string | null
+          id?: string
+          is_current?: boolean
+          location?: string | null
+          responsibilities?: string[]
+          skills?: string[]
+          source?: Database["public"]["Enums"]["data_source"]
+          start_date?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accomplishments?: string[]
+          created_at?: string
+          employer?: string
+          end_date?: string | null
+          id?: string
+          is_current?: boolean
+          location?: string | null
+          responsibilities?: string[]
+          skills?: string[]
+          source?: Database["public"]["Enums"]["data_source"]
+          start_date?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       interview_sessions: {
         Row: {
@@ -1160,6 +1259,42 @@ export type Database = {
           provider_customer_id?: string | null
           provider_subscription_id?: string | null
           status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      target_niches: {
+        Row: {
+          created_at: string
+          id: string
+          industry: string | null
+          name: string
+          priority: number
+          rationale: string | null
+          source: Database["public"]["Enums"]["data_source"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          industry?: string | null
+          name: string
+          priority?: number
+          rationale?: string | null
+          source?: Database["public"]["Enums"]["data_source"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          industry?: string | null
+          name?: string
+          priority?: number
+          rationale?: string | null
+          source?: Database["public"]["Enums"]["data_source"]
           updated_at?: string
           user_id?: string
         }

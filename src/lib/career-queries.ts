@@ -20,7 +20,10 @@ export const recordQuery = <T extends RecordTable>(table: T, userId: string | un
     queryKey: [table, userId],
     enabled: Boolean(userId),
     queryFn: async () => {
-      const { data, error } = await supabase.from(table).select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from(table)
+        .select("*")
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as Tables<T>[];
     },
@@ -62,7 +65,42 @@ export const documentsQuery = (userId: string | undefined) =>
     queryKey: ["documents", userId],
     enabled: Boolean(userId),
     queryFn: async () => {
-      const { data, error } = await supabase.from("documents").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("documents")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+type StudentTable = "internships" | "extracurriculars";
+
+/** Student-friendly records (internships, activities), newest first. */
+export const studentRecordQuery = <T extends StudentTable>(table: T, userId: string | undefined) =>
+  queryOptions({
+    queryKey: [table, userId],
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(table)
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as Tables<T>[];
+    },
+  });
+
+/** Target niches in the user's chosen order (priority ascending). */
+export const nichesQuery = (userId: string | undefined) =>
+  queryOptions({
+    queryKey: ["target_niches", userId],
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("target_niches")
+        .select("*")
+        .order("priority", { ascending: true })
+        .order("created_at", { ascending: true });
       if (error) throw error;
       return data ?? [];
     },
