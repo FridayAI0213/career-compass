@@ -29,6 +29,9 @@ const NAV = [
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
+/** Hidden until these features exist, so the app never advertises unbuilt work. */
+const SHOW_PLANNED = false;
+
 const PLANNED = [
   { label: "Find Opportunities", icon: Search },
   { label: "Interviews", icon: MessagesSquare },
@@ -60,17 +63,21 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
         </Link>
       ))}
 
-      <p className="eyebrow px-2.5 pt-6 pb-2">Coming next</p>
-      {PLANNED.map((item) => (
-        <span
-          key={item.label}
-          aria-disabled="true"
-          className="flex cursor-not-allowed items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-muted-foreground/60"
-        >
-          <item.icon className="size-4 opacity-60" aria-hidden />
-          {item.label}
-        </span>
-      ))}
+      {SHOW_PLANNED ? (
+        <>
+          <p className="eyebrow px-2.5 pt-6 pb-2">Coming next</p>
+          {PLANNED.map((item) => (
+            <span
+              key={item.label}
+              aria-disabled="true"
+              className="flex cursor-not-allowed items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-muted-foreground/60"
+            >
+              <item.icon className="size-4 opacity-60" aria-hidden />
+              {item.label}
+            </span>
+          ))}
+        </>
+      ) : null}
     </>
   );
 }
