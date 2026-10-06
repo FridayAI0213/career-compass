@@ -12,8 +12,11 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (search: Record<string, unknown>): { redirect?: string } =>
-    typeof search["redirect"] === "string" ? { redirect: search["redirect"] } : {},
+  validateSearch: (search: Record<string, unknown>): { redirect?: string; reset?: string; forgot?: string } => ({
+    ...(typeof search["redirect"] === "string" ? { redirect: search["redirect"] } : {}),
+    ...(search["reset"] === "1" || search["reset"] === 1 ? { reset: "1" } : {}),
+    ...(search["forgot"] === "1" || search["forgot"] === 1 ? { forgot: "1" } : {}),
+  }),
   head: () => ({
     meta: [
       { title: "Sign in — JobOS Career Intelligence" },
@@ -27,6 +30,27 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+/** Maps provider errors to plain wording that never reveals whether an account exists. */
+function friendlyAuthError(message: string): { text: string; unconfirmed?: boolean } {
+  const lower = message.toLowerCase();
+  if (lower.includes("invalid login credentials")) {
+    return { text: "That email and password combination didn't work. Check both and try again." };
+  }
+  if (lower.includes("email not confirmed")) {
+    return {
+      text: "Please confirm your email address before signing in. Check your inbox for the link, or send a new one.",
+      unconfirmed: true,
+    };
+  }
+  if (lower.includes("rate limit") || lower.includes("too many")) {
+    return { text: "Too many attempts. Please wait a few minutes and try again." };
+  }
+  if (lower.includes("pwned") || lower.includes("leaked") || lower.includes("weak")) {
+    return { text: "This password has appeared in a data breach or is too weak. Choose a different one." };
+  }
+  return { text: message };
+}
+
 function AuthPage() {
   const router = useRouter();
   const search = useSearch({ from: "/auth" });
@@ -38,6 +62,11 @@ function AuthPage() {
   const [busy, setBusy] = useState<null | "signin" | "signup" | "google">(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [pendingConfirm, setPendingConfirm] = useState<string | null>(null);
+  const [showResend, setShowResend] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [forgotMode, setForgotMode] = useState(search.forgot === "1");
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSent, setForgotSent] = useState(false);
 
   // Surface an OAuth failure that came back through the URL rather than
   // silently dropping the user on a signed-out sign-in page.
@@ -56,10 +85,13 @@ function AuthPage() {
     event.preventDefault();
     setFormError(null);
     setBusy("signin");
+    setShowResend(false);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(null);
     if (error) {
-      setFormError(error.message);
+      const friendly = friendlyAuthError(error.message);
+      setFormError(friendly.text);
+      setShowResend(Boolean(friendly.unconfirmed));
       return;
     }
     if (!data.session) {
@@ -83,7 +115,7 @@ function AuthPage() {
     });
     setBusy(null);
     if (error) {
-      setFormError(error.message);
+      setFormError(friendlyAuthError(error.message).text);
       return;
     }
     // With email confirmation on, signUp returns no session: the user is NOT
@@ -94,6 +126,43 @@ function AuthPage() {
       return;
     }
     await router.navigate({ to: destination, replace: true });
+  }
+
+  async function resendConfirmation() {
+    if (!email) {
+      setFormError("Enter your email above, then send a new confirmation link.");
+      return;
+    }
+    setResending(true);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
+    setResending(false);
+    if (error && friendlyAuthError(error.message).text.startsWith("Too many")) {
+      setFormError("Too many attempts. Please wait a few minutes and try again.");
+      return;
+    }
+    // Same message either way, so this never reveals whether the address has an account.
+    setShowResend(false);
+    setFormError(null);
+    setPendingConfirm(email);
+  }
+
+  async function requestReset(event: React.FormEvent) {
+    event.preventDefault();
+    setFormError(null);
+    setBusy("signin");
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setBusy(null);
+    if (error && friendlyAuthError(error.message).text.startsWith("Too many")) {
+      setFormError("Too many attempts. Please wait a few minutes and try again.");
+      return;
+    }
+    setForgotSent(true);
   }
 
   async function google() {
@@ -153,6 +222,12 @@ function AuthPage() {
           <h1 className="font-display text-2xl font-semibold">Welcome to JobOS</h1>
           <p className="mt-1 text-sm text-muted-foreground">Sign in to continue your career plan.</p>
 
+          {search.reset === "1" ? (
+            <p role="status" className="mt-5 rounded-md border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+              Your password was updated. Sign in with your new password.
+            </p>
+          ) : null}
+
           {pendingConfirm ? (
             <div className="mt-5 rounded-md border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
               We sent a confirmation link to <span className="text-foreground">{pendingConfirm}</span>. Open it, then
@@ -166,8 +241,56 @@ function AuthPage() {
               className="mt-5 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
             >
               {formError}
+              {showResend ? (
+                <button
+                  type="button"
+                  className="mt-2 block font-medium text-foreground underline underline-offset-2"
+                  onClick={resendConfirmation}
+                  disabled={resending}
+                >
+                  {resending ? "Sending…" : "Resend confirmation email"}
+                </button>
+              ) : null}
             </p>
           ) : null}
+
+          {forgotMode ? (
+            <div className="mt-6 space-y-3">
+              <h2 className="font-display text-base font-semibold">Reset your password</h2>
+              {forgotSent ? (
+                <p role="status" className="text-sm text-muted-foreground">
+                  If an account exists for that email, a reset link is on its way. Check your inbox and spam folder.
+                </p>
+              ) : (
+                <form className="space-y-3" onSubmit={requestReset}>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="forgot-email">Email</Label>
+                    <Input
+                      id="forgot-email"
+                      type="email"
+                      required
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={busy !== null}>
+                    {busy ? "Sending…" : "Send reset link"}
+                  </Button>
+                </form>
+              )}
+              <button
+                type="button"
+                className="text-sm text-primary hover:underline"
+                onClick={() => {
+                  setForgotMode(false);
+                  setForgotSent(false);
+                }}
+              >
+                Back to sign in
+              </button>
+            </div>
+          ) : (
+          <>
 
           <Button variant="outline" className="mt-6 w-full" onClick={google} disabled={busy !== null}>
             {busy === "google" ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
@@ -204,6 +327,17 @@ function AuthPage() {
                 <Button type="submit" className="w-full" disabled={busy !== null}>
                   {busy === "signin" ? "Signing in…" : "Sign in"}
                 </Button>
+                <button
+                  type="button"
+                  className="text-sm text-primary hover:underline"
+                  onClick={() => {
+                    setForgotEmail(email);
+                    setFormError(null);
+                    setForgotMode(true);
+                  }}
+                >
+                  Forgot password?
+                </button>
 
               </form>
             </TabsContent>
@@ -236,6 +370,8 @@ function AuthPage() {
               </form>
             </TabsContent>
           </Tabs>
+          </>
+          )}
         </div>
       </div>
     </div>
