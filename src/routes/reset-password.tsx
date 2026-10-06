@@ -54,7 +54,11 @@ function ResetPassword() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session && (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION")) ready();
+      if (
+        session &&
+        (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION")
+      )
+        ready();
     });
     void supabase.auth.getSession().then(({ data }) => {
       if (data.session) ready();
@@ -87,8 +91,14 @@ function ResetPassword() {
       const message = updateError.message.toLowerCase();
       if (message.includes("session") || message.includes("expired") || message.includes("jwt")) {
         setPhase("invalid");
-      } else if (message.includes("pwned") || message.includes("leaked") || message.includes("weak")) {
-        setError("This password has appeared in a data breach or is too weak. Choose a different one.");
+      } else if (
+        message.includes("pwned") ||
+        message.includes("leaked") ||
+        message.includes("weak")
+      ) {
+        setError(
+          "This password has appeared in a data breach or is too weak. Choose a different one.",
+        );
       } else if (message.includes("same") || message.includes("different")) {
         setError("Choose a password you haven't used for this account before.");
       } else {
@@ -113,7 +123,8 @@ function ResetPassword() {
         ) : phase === "invalid" ? (
           <div role="alert" className="mt-4 space-y-3">
             <p className="text-sm text-muted-foreground">
-              This reset link is invalid or has expired. Links work once and only for a limited time.
+              This reset link is invalid or has expired. Links work once and only for a limited
+              time.
             </p>
             <Button asChild className="w-full">
               <Link to="/auth" search={{ forgot: "1" }}>
