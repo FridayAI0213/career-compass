@@ -1300,12 +1300,51 @@ export type Database = {
         }
         Relationships: []
       }
+      usage_events: {
+        Row: {
+          created_at: string
+          feature: string | null
+          id: string
+          kind: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feature?: string | null
+          id?: string
+          kind: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feature?: string | null
+          id?: string
+          kind?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      ai_entitlement: {
+        Args: { _uid: string }
+        Returns: {
+          analyses_limit: number
+          period_end: string
+          period_start: string
+          plans_limit: number
+          tier: string
+        }[]
+      }
+      ai_quota_status: { Args: never; Returns: Json }
+      consume_ai_quota: {
+        Args: { _feature?: string; _kind: string }
+        Returns: string
+      }
+      release_ai_quota: { Args: { _event_id: string }; Returns: undefined }
     }
     Enums: {
       application_status:
