@@ -143,7 +143,7 @@ function ListFrame<T>({
   addLabel,
   children,
 }: {
-  query: { isPending: boolean; isError: boolean; data?: T[]; refetch: () => unknown };
+  query: { isPending: boolean; isError: boolean; data?: T[] | undefined; refetch: () => unknown };
   empty: { title: string; message: string };
   onAdd: () => void;
   addLabel: string;
@@ -261,7 +261,11 @@ export function NichesPanel({ userId }: { userId: string | undefined }) {
     }) => {
       const next = [...rows];
       const target = index + direction;
-      [next[index], next[target]] = [next[target], next[index]];
+      const a = next[index];
+      const b = next[target];
+      if (!a || !b) return;
+      next[index] = b;
+      next[target] = a;
       const results = await Promise.all(
         next.map((row, position) =>
           supabase.from("target_niches").update({ priority: position }).eq("id", row.id),

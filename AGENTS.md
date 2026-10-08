@@ -11,3 +11,4 @@
 
 - Shared job-catalogue rows are written server-side via the admin client with created_by NULL, so no user id is exposed on rows every signed-in user can read.
 - anon has no table privileges in public; billing (subscriptions) and reference (career_specializations) tables are client read-only.
+- AI allowance is enforced in the database (`consume_ai_quota` reserve before each AI call, server-only `release_ai_quota` refund on failure); entitlement derives only from server-written `subscriptions` rows. Why: clients can never grant themselves usage or a plan.

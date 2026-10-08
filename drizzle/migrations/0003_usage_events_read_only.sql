@@ -1,0 +1,1 @@
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON public.usage_events FROM authenticated, anon;

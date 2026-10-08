@@ -72,6 +72,10 @@ export const explainMatch = createServerFn({ method: "POST" })
       context.supabase.from("certifications").select("name, issuer").limit(20),
     ]);
 
+    const { reserveQuota, releaseQuota, QUOTA_EXHAUSTED_MESSAGE } = await import("./ai/quota.server");
+    const reservation = await reserveQuota(context.supabase, "analysis", "match_explanation");
+    if (!reservation) return { explanation: null, status: "unavailable", message: QUOTA_EXHAUSTED_MESSAGE.analysis };
+
     try {
       const result = await runAgent<MatchExplanation>({
         agent: "match_explanation_agent",
@@ -122,6 +126,7 @@ export const explainMatch = createServerFn({ method: "POST" })
 
       return { explanation: result.data, status: "ready" };
     } catch (error) {
+      await releaseQuota(reservation);
       console.error("explainMatch failed", error instanceof Error ? error.name : "unknown error");
       return {
         explanation: null,

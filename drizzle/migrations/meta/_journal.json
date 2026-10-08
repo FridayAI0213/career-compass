@@ -15,6 +15,20 @@
       "when": 1791322718608,
       "tag": "0001_student_profile_records",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791484399849,
+      "tag": "0002_ai_usage_quota",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791484497619,
+      "tag": "0003_usage_events_read_only",
+      "breakpoints": true
     }
   ]
 }
