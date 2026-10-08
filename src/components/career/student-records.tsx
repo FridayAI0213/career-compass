@@ -143,7 +143,7 @@ function ListFrame<T>({
   addLabel,
   children,
 }: {
-  query: { isPending: boolean; isError: boolean; data?: T[]; refetch: () => unknown };
+  query: { isPending: boolean; isError: boolean; data?: T[] | undefined; refetch: () => unknown };
   empty: { title: string; message: string };
   onAdd: () => void;
   addLabel: string;
