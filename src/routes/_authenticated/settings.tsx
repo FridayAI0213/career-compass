@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { PlanUsage } from "@/components/billing/plan-usage";
 import { careerProfileQuery } from "@/lib/career-queries";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -110,6 +111,9 @@ function Settings() {
         <Button disabled={save.isPending} onClick={() => save.mutate()}>
           {save.isPending ? "Saving…" : "Save preferences"}
         </Button>
+      </div>
+      <div className="mt-8 max-w-2xl">
+        <PlanUsage />
       </div>
     </AppShell>
   );
