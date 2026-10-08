@@ -105,3 +105,23 @@ export const nichesQuery = (userId: string | undefined) =>
       return data ?? [];
     },
   });
+
+export interface QuotaStatus {
+  tier: "trial" | "pro" | "complimentary";
+  analyses: { limit: number; used: number; remaining: number };
+  plans: { limit: number; used: number; remaining: number };
+  period_start: string | null;
+  period_end: string | null;
+}
+
+/** Plan and AI allowance, computed by the database from server-written subscription rows. */
+export const quotaQuery = (userId: string | undefined) =>
+  queryOptions({
+    queryKey: ["ai-quota", userId],
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("ai_quota_status");
+      if (error) throw error;
+      return data as unknown as QuotaStatus;
+    },
+  });
