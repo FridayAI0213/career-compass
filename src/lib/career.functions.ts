@@ -43,6 +43,18 @@ export const suggestSpecializations = createServerFn({ method: "POST" })
       };
     }
 
+    const { reserveQuota, releaseQuota, QUOTA_EXHAUSTED_MESSAGE } = await import("./ai/quota.server");
+    const reservation = await reserveQuota(context.supabase, "plan", "career_specialization");
+    if (!reservation) {
+      return {
+        profession: data.field,
+        specializations: [],
+        followUpQuestions: [],
+        aiAvailable: true,
+        note: QUOTA_EXHAUSTED_MESSAGE.plan,
+      };
+    }
+
     try {
       const result = await runAgent<SpecializationResponse>({
         agent: "career_specialization_agent",
@@ -104,7 +116,8 @@ export const suggestSpecializations = createServerFn({ method: "POST" })
         aiAvailable: true,
       };
     } catch (error) {
-      console.error("suggestSpecializations failed", error);
+      await releaseQuota(reservation);
+      console.error("suggestSpecializations failed", error instanceof Error ? error.name : "unknown error");
       return {
         profession: data.field,
         specializations: [],
@@ -169,6 +182,10 @@ export const extractResume = createServerFn({ method: "POST" })
 
     if (!isAiConfigured()) return { extracted: null, error: "AI is not configured for this environment." };
 
+    const { reserveQuota, releaseQuota, QUOTA_EXHAUSTED_MESSAGE } = await import("./ai/quota.server");
+    const reservation = await reserveQuota(context.supabase, "analysis", "resume_analysis");
+    if (!reservation) return { extracted: null, error: QUOTA_EXHAUSTED_MESSAGE.analysis };
+
     try {
       const result = await runAgent<ExtractedResume>({
         agent: "resume_analysis_agent",
@@ -201,7 +218,8 @@ export const extractResume = createServerFn({ method: "POST" })
 
       return { extracted: result.data };
     } catch (error) {
-      console.error("extractResume failed", error);
+      await releaseQuota(reservation);
+      console.error("extractResume failed", error instanceof Error ? error.name : "unknown error");
       await context.supabase
         .from("documents")
         .update({ extraction_status: "failed" })
