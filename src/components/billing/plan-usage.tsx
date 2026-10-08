@@ -13,7 +13,7 @@ export function PlanUsage() {
   const quota = useQuery(quotaQuery(user?.id));
 
   return (
-    <section className="panel space-y-4 p-5" aria-labelledby="plan-usage-heading">
+    <section className="space-y-4 rounded-lg border border-border bg-card p-5 shadow-panel" aria-labelledby="plan-usage-heading">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id="plan-usage-heading" className="font-display text-base font-semibold">
           Plan & usage
