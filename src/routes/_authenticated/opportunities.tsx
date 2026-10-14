@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { refreshOpportunities } from "@/lib/opportunities.functions";
 import { applicationsQuery, topOpportunitiesQuery } from "@/lib/career-queries";
 import { ErrorState, LoadingRows } from "@/components/ui/query-state";
+import { JobLinks } from "@/components/career/job-links";
 
 export const Route = createFileRoute("/_authenticated/opportunities")({
   head: () => ({
@@ -207,16 +208,7 @@ function Opportunities() {
                       <EvidenceList title="Gaps" items={analysis?.gaps ?? []} />
                       <EvidenceList title="Risks" items={analysis?.risk_factors ?? []} />
                     </div>
-                    {job.application_url ? (
-                      <a
-                        className="text-primary hover:underline"
-                        href={job.application_url}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Open the posting
-                      </a>
-                    ) : null}
+                    <JobLinks job={job} />
                   </div>
                 ) : null}
               </li>

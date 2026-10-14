@@ -140,7 +140,12 @@ function Landing() {
           <span className="flex items-center gap-2">
             <ShieldCheck className="size-4" /> Row-level security on every record.
           </span>
-          <span>© {new Date().getFullYear()} JobOS</span>
+          <span className="flex gap-4">
+            <a href="/legal#privacy" className="hover:underline">Privacy</a>
+            <a href="/legal#terms" className="hover:underline">Terms</a>
+            <a href="/legal#support" className="hover:underline">Support</a>
+            <span>© {new Date().getFullYear()} JobOS</span>
+          </span>
         </div>
       </footer>
     </div>
