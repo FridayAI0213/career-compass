@@ -8,6 +8,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { ScoreDial } from "@/components/career/score-dial";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { JobQuickLinks } from "@/components/career/job-links";
 import { refreshOpportunities } from "@/lib/opportunities.functions";
 import { applicationsQuery, careerProfileQuery, recordQuery, topOpportunitiesQuery } from "@/lib/career-queries";
 
@@ -123,6 +124,9 @@ function Dashboard() {
                       <p className="truncate text-sm text-muted-foreground">
                         {job.company} · {job.location ?? "Location flexible"}
                       </p>
+                      <div className="mt-1.5">
+                        <JobQuickLinks job={job} />
+                      </div>
                     </div>
                     <Badge variant="secondary">{row.priority.replaceAll("_", " ")}</Badge>
                   </li>

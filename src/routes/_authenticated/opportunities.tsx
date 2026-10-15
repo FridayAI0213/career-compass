@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { refreshOpportunities } from "@/lib/opportunities.functions";
 import { applicationsQuery, topOpportunitiesQuery } from "@/lib/career-queries";
 import { ErrorState, LoadingRows } from "@/components/ui/query-state";
-import { JobLinks } from "@/components/career/job-links";
+import { JobLinks, JobQuickLinks } from "@/components/career/job-links";
 
 export const Route = createFileRoute("/_authenticated/opportunities")({
   head: () => ({
@@ -147,6 +147,9 @@ function Opportunities() {
                       {job.work_mode ?? "unspecified"}
                       {job.salary_min ? ` · from $${job.salary_min.toLocaleString()}` : ""}
                     </p>
+                    <div className="mt-2">
+                      <JobQuickLinks job={job} />
+                    </div>
                     <div className="mt-2 flex flex-wrap gap-1">
                       {(analysis?.strengths ?? []).slice(0, 3).map((item: string) => (
                         <Badge key={item} variant="secondary">

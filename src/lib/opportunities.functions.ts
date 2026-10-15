@@ -83,6 +83,31 @@ export const refreshOpportunities = createServerFn({ method: "POST" })
       );
     }
 
+    // Closed-listing detection: any stored posting no longer on its employer's
+    // board is marked closed. Boards that failed to respond are skipped.
+    try {
+      const { listOpenIds } = await import("./jobs/providers/ats");
+      const open = await listOpenIds();
+      const { data: stored } = await supabaseAdmin
+        .from("jobs")
+        .select("id, source, external_id")
+        .in("source", ["greenhouse", "lever"])
+        .eq("status", "active");
+      const closedIds = (stored ?? [])
+        .filter((row) => {
+          const token = (row.external_id ?? "").split(":")[0];
+          const board = open.get(`${row.source}:${token}`);
+          return board ? !board.ids.has(row.external_id ?? "") : false;
+        })
+        .map((row) => row.id);
+      if (closedIds.length) {
+        await supabaseAdmin.from("jobs").update({ status: "closed" }).in("id", closedIds);
+        await supabase.from("job_recommendations").delete().eq("user_id", userId).in("job_id", closedIds);
+      }
+    } catch (error) {
+      console.error("Closed-listing check failed", error);
+    }
+
     // Sample rows are retired from discovery: drop this user's sample-based
     // recommendations so only real employer postings are ranked.
     const { data: demoRows } = await supabase.from("jobs").select("id").eq("is_demo", true);

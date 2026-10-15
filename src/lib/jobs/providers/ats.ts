@@ -14,15 +14,34 @@ export const GREENHOUSE_BOARDS: { token: string; company: string; industry: stri
   { token: "cloudflare", company: "Cloudflare", industry: "Internet Infrastructure" },
   { token: "gitlab", company: "GitLab", industry: "Software" },
   { token: "airbnb", company: "Airbnb", industry: "Travel & Hospitality" },
+  { token: "reddit", company: "Reddit", industry: "Internet & Media" },
+  { token: "dropbox", company: "Dropbox", industry: "Software" },
+  { token: "pinterest", company: "Pinterest", industry: "Internet & Media" },
+  { token: "lyft", company: "Lyft", industry: "Transportation" },
+  { token: "instacart", company: "Instacart", industry: "Retail Technology" },
+  { token: "robinhood", company: "Robinhood", industry: "Financial Technology" },
+  { token: "coinbase", company: "Coinbase", industry: "Financial Technology" },
+  { token: "databricks", company: "Databricks", industry: "Data & AI" },
+  { token: "duolingo", company: "Duolingo", industry: "Education Technology" },
+  { token: "asana", company: "Asana", industry: "Software" },
+  { token: "roblox", company: "Roblox", industry: "Gaming" },
+  { token: "gusto", company: "Gusto", industry: "Software" },
+  { token: "affirm", company: "Affirm", industry: "Financial Technology" },
+  { token: "brex", company: "Brex", industry: "Financial Technology" },
+  { token: "samsara", company: "Samsara", industry: "Industrial IoT" },
+  { token: "okta", company: "Okta", industry: "Security" },
+  { token: "elastic", company: "Elastic", industry: "Software" },
+  { token: "mongodb", company: "MongoDB", industry: "Software" },
 ];
 
 export const LEVER_BOARDS: { token: string; company: string; industry: string }[] = [
   { token: "palantir", company: "Palantir", industry: "Software" },
   { token: "spotify", company: "Spotify", industry: "Media & Entertainment" },
   { token: "zoox", company: "Zoox", industry: "Autonomous Vehicles" },
+  { token: "wealthfront", company: "Wealthfront", industry: "Financial Technology" },
 ];
 
-const PER_BOARD = 4;
+const PER_BOARD = 3;
 const TIMEOUT_MS = 8000;
 
 async function getJson<T>(url: string): Promise<T> {
@@ -267,3 +286,23 @@ export const atsJobProvider: JobProvider = {
     });
   },
 };
+
+/**
+ * Every currently-open posting id per board, as "source" -> Set of external ids.
+ * A board that fails to respond is omitted, so its jobs are never wrongly closed.
+ */
+export async function listOpenIds(): Promise<Map<string, { source: string; prefix: string; ids: Set<string> }>> {
+  const out = new Map<string, { source: string; prefix: string; ids: Set<string> }>();
+  await Promise.allSettled([
+    ...GREENHOUSE_BOARDS.map(async (b) => {
+      const r = await getJson<{ jobs: GhListJob[] }>(`https://boards-api.greenhouse.io/v1/boards/${b.token}/jobs`);
+      out.set(`greenhouse:${b.token}`, { source: "greenhouse", prefix: `${b.token}:`, ids: new Set(r.jobs.map((j) => `${b.token}:${j.id}`)) });
+    }),
+    ...LEVER_BOARDS.map(async (b) => {
+      const r = await getJson<LeverPosting[]>(`https://api.lever.co/v0/postings/${b.token}?mode=json`);
+      if (!Array.isArray(r)) return;
+      out.set(`lever:${b.token}`, { source: "lever", prefix: `${b.token}:`, ids: new Set(r.map((p) => `${b.token}:${p.id}`)) });
+    }),
+  ]);
+  return out;
+}
