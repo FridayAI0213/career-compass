@@ -42,7 +42,7 @@ export const refreshOpportunities = createServerFn({ method: "POST" })
       ...(skills ?? []).slice(0, 12).map((s) => s.name),
     ].filter((value): value is string => Boolean(value));
 
-    const discovered = await discoverJobs({ keywords, limit: 12 });
+    const discovered = await discoverJobs({ keywords, limit: 40 });
 
     // Catalogue postings are shared system data, not user records: they are
     // written by the server (caller already verified above) with no creator,
@@ -83,10 +83,19 @@ export const refreshOpportunities = createServerFn({ method: "POST" })
       );
     }
 
+    // Sample rows are retired from discovery: drop this user's sample-based
+    // recommendations so only real employer postings are ranked.
+    const { data: demoRows } = await supabase.from("jobs").select("id").eq("is_demo", true);
+    const demoIds = (demoRows ?? []).map((r) => r.id);
+    if (demoIds.length) {
+      await supabase.from("job_recommendations").delete().eq("user_id", userId).in("job_id", demoIds);
+    }
+
     const { data: jobRows } = await supabase
       .from("jobs")
       .select("*")
       .eq("status", "active")
+      .eq("is_demo", false)
       .order("posted_at", { ascending: false })
       .limit(40);
 
@@ -194,7 +203,7 @@ export const refreshOpportunities = createServerFn({ method: "POST" })
       demoOnly: providers.length === 0,
       message:
         providers.length === 0
-          ? "Scored against the sample catalogue. Connect a live job source to score real postings."
-          : "Scored against connected job sources.",
+          ? "No job source is available right now."
+          : "Scored against live employer job boards.",
     };
   });

@@ -10,12 +10,12 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "JobOS keeps your career record, scores openings against it with transparent rules, and tracks your applications in one pipeline. Matching currently uses a sample catalogue while live job sources are connected.",
+          "JobOS keeps your career record, scores openings against it with transparent rules, and tracks your applications in one pipeline. Openings come from public employer job boards.",
       },
       { property: "og:title", content: "JobOS — AI career intelligence for any profession" },
       {
         property: "og:description",
-        content: "Keep your career record, see transparent match scores against a sample catalogue, and track applications in one pipeline.",
+        content: "Keep your career record, see transparent match scores against real employer postings, and track applications in one pipeline.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -33,7 +33,7 @@ const FEATURES = [
   {
     icon: Target,
     title: "Evidence-based matching",
-    body: "Scores come from deterministic rules across skills, experience, seniority, education, location and pay. Openings currently come from a sample catalogue while live job sources are connected.",
+    body: "Scores come from deterministic rules across skills, experience, seniority, education, location and pay. Openings come from employers' public Greenhouse and Lever job boards.",
   },
   {
     icon: Workflow,
