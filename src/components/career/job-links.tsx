@@ -96,3 +96,38 @@ export function JobLinks({ job }: { job: JobLinkFields }) {
     </div>
   );
 }
+
+/** Always-visible apply / listing links for a job row. Never fabricated. */
+export function JobQuickLinks({
+  job,
+}: {
+  job: Pick<JobLinkFields, "application_url" | "source_url" | "is_demo" | "status">;
+}) {
+  const source = safeExternalUrl(job.source_url);
+  const apply = safeExternalUrl(job.application_url) ?? source;
+  if (!source && !apply) {
+    return (
+      <span className="text-xs text-muted-foreground">
+        {job.is_demo ? "Sample posting: no link" : "No link provided by the source"}
+      </span>
+    );
+  }
+  const closed = job.status !== "active";
+  const cls =
+    "inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1 text-xs font-medium hover:bg-accent";
+  return (
+    <span className="flex flex-wrap items-center gap-2">
+      {apply && !closed ? (
+        <a className={`${cls} text-primary`} href={apply} target="_blank" rel="noopener noreferrer">
+          Apply <ExternalLink className="size-3" aria-hidden />
+        </a>
+      ) : null}
+      {source ? (
+        <a className={cls} href={source} target="_blank" rel="noopener noreferrer">
+          View requirements <ExternalLink className="size-3" aria-hidden />
+        </a>
+      ) : null}
+      {closed ? <span className="text-xs text-destructive">Listing closed</span> : null}
+    </span>
+  );
+}
