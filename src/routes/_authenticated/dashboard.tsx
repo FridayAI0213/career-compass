@@ -103,7 +103,7 @@ function Dashboard() {
               See all
             </Link>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">Scored against a sample catalogue of postings, not live listings.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Scored against public employer job boards.</p>
 
           {top.length === 0 ? (
             <p className="py-8 text-sm text-muted-foreground">

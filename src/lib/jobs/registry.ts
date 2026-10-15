@@ -1,4 +1,4 @@
-import { demoJobProvider } from "./providers/demo";
+import { atsJobProvider } from "./providers/ats";
 import { dedupe } from "./normalize";
 import type { JobProvider, JobQuery, NormalizedJob } from "./types";
 
@@ -8,7 +8,7 @@ import type { JobProvider, JobQuery, NormalizedJob } from "./types";
  * Real sources (partner APIs, ATS feeds) are added here once credentials are
  * configured. Until then only the clearly-labelled sample provider is active.
  */
-const PROVIDERS: JobProvider[] = [demoJobProvider];
+const PROVIDERS: JobProvider[] = [atsJobProvider];
 
 export function listProviders(): { id: string; label: string; configured: boolean }[] {
   return PROVIDERS.map((p) => ({ id: p.id, label: p.label, configured: p.isConfigured() }));

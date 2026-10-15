@@ -108,7 +108,7 @@ function Opportunities() {
       }
     >
       <p className="mb-4 text-sm text-muted-foreground">
-        Matches are currently scored against a sample catalogue of postings, not live listings.
+        Openings come from public employer job boards (Greenhouse and Lever). Refresh to pull current listings.
       </p>
       {recommendations.isPending ? (
         <LoadingRows rows={4} className="[&>*]:h-28" />
