@@ -35,6 +35,8 @@ export interface ComponentScore {
   score: number;
   weight: number;
   detail: string;
+  /** match = confirmed fit, conflict = confirmed mismatch, unknown = missing data on either side. */
+  status: "match" | "conflict" | "unknown";
 }
 
 export interface MatchEvidence {
