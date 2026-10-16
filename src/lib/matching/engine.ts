@@ -191,7 +191,7 @@ export function scoreMatch(candidate: CandidateSnapshot, job: JobSnapshot): Matc
           ? 85
           : 55;
 
-  const components: ComponentScore[] = [
+  const components: ComponentScore[] = ([
     { key: "skills", label: "Skills", score: clamp(skillsScore), weight: 0.26, detail: `${matchedSkills.length}/${job.skills.length || 0} listed skills matched.` },
     { key: "experience", label: "Experience", score: clamp(experienceScore), weight: 0.16, detail: experienceDetail },
     { key: "trajectory", label: "Career trajectory", score: clamp(trajectoryScore), weight: 0.13, detail: "Alignment with stated target roles." },
@@ -202,7 +202,19 @@ export function scoreMatch(candidate: CandidateSnapshot, job: JobSnapshot): Matc
     { key: "compensation", label: "Compensation", score: clamp(compensationScore), weight: 0.06, detail: compensationDetail },
     { key: "industry", label: "Industry", score: clamp(industryScore), weight: 0.03, detail: job.industry ? `Posting industry: ${job.industry}.` : "Industry not stated." },
     { key: "preferences", label: "Work mode", score: clamp(workModeScore), weight: 0.03, detail: job.workMode ? `Role is ${job.workMode}.` : "Work mode not stated." },
-  ];
+  ] as Omit<ComponentScore, "status">[]).map((c) => ({ ...c, status: "unknown" as ComponentScore["status"] }));
+
+  const unknownKeys = new Set<string>();
+  if (jobSkills.length === 0) unknownKeys.add("skills");
+  if (required <= 0) unknownKeys.add("experience");
+  if (candidate.targetRoles.length === 0) unknownKeys.add("trajectory");
+  if (candidateLevel < 0 || jobLevel < 0) unknownKeys.add("seniority");
+  if (!remoteFriendly && !locationMatch && (candidate.preferredLocations.length === 0 || jobLocation.length === 0)) unknownKeys.add("location");
+  if (requiredDegree < 0) unknownKeys.add("education");
+  if (job.salaryMax == null || candidate.salaryMin == null) unknownKeys.add("compensation");
+  if (candidate.targetIndustries.length === 0 || !job.industry) unknownKeys.add("industry");
+  if (!candidate.workMode || !job.workMode) unknownKeys.add("preferences");
+  for (const c of components) c.status = unknownKeys.has(c.key) ? "unknown" : c.score >= 70 ? "match" : "conflict";
 
   const matchScore = clamp(components.reduce((sum, c) => sum + c.score * c.weight, 0));
 
